@@ -1,0 +1,1197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KM Maintenance Control — Final</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f4f7;color:#17202a;font:14px Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.btn{background:#175cd3;color:#fff;border:0;border-radius:9px;padding:11px 14px;font-weight:800}
+.btn.dark{background:#344054}.btn.red{background:#b42318}.btn.green{background:#067647}
+header{background:#101828;color:#fff;padding:14px 16px}
+.head{max-width:1500px;margin:auto;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.title{font-size:21px;font-weight:800}.sub{color:#667085}.head .sub{color:#cfd4dc;font-size:12px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.tabs{max-width:1500px;margin:auto;padding:10px;display:flex;gap:8px;overflow:auto}
+.tab{background:#fff;border:1px solid #d0d5dd;border-radius:10px;padding:11px 15px;font-weight:800;min-width:150px}
+.tab.active{background:#101828;color:#fff}
+main{max-width:1500px;margin:auto;padding:12px}
+.page{display:none}.page.active{display:block}
+.panel,.kpi,.linecard{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:13px;margin-bottom:12px}
+.filters,.entry{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+label{display:block;font-size:11px;font-weight:800;color:#667085;margin-bottom:4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #d0d5dd;border-radius:8px;background:#fff}
+textarea{min-height:78px;resize:vertical}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:12px}
+.kpi b{display:block;font-size:21px;margin-top:5px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.linecard h3{margin:0 0 7px}
+.scroll{overflow:auto;max-height:520px}
+table{width:100%;border-collapse:collapse;min-width:1000px}
+th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;font-size:12px;vertical-align:top}
+th{background:#f9fafb;position:sticky;top:0;z-index:1}
+.critical{background:#fee4e2!important}.major{background:#fffaeb!important}
+.notice{padding:10px;border-radius:9px;background:#eff8ff;color:#175cd3;font-weight:700;margin-bottom:10px}
+.warn{padding:10px;border-radius:9px;background:#fffaeb;color:#93370d;margin-bottom:10px}
+.badge{display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:800}
+.badge.critical{background:#fecdca;color:#b42318}.badge.major{background:#fedf89;color:#93370d}.badge.normal{background:#d1fadf;color:#067647}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:9000}
+.modalbox{background:#fff;border-radius:15px;padding:18px;width:min(760px,100%);max-height:90vh;overflow:auto}
+#login{position:fixed;inset:0;background:#101828;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9999}
+.loginbox{background:#fff;border-radius:18px;padding:25px;width:min(420px,100%)}
+.loginbox input{margin:7px 0}
+.small{font-size:12px}.right{text-align:right}
+@media(max-width:800px){.head{flex-direction:column;align-items:stretch}.filters,.entry{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:480px){.filters,.entry{grid-template-columns:1fr}.title{font-size:18px}.tab{min-width:135px}}
+
+/* Final touch-up */
+.kpi{position:relative;overflow:hidden}
+.kpi.best{border-top:4px solid #12b76a;background:#f4fff8}
+.kpi.good{border-top:4px solid #2e90fa;background:#f5f9ff}
+.kpi.average{border-top:4px solid #fdb022;background:#fffaf0}
+.kpi.bad{border-top:4px solid #f79009;background:#fff8f1}
+.kpi.poor{border-top:4px solid #f04438;background:#fff6f5}
+.machine-best{background:#f4fff8}.machine-good{background:#f5f9ff}
+.machine-average{background:#fffaf0}.machine-bad{background:#fff8f1}.machine-poor{background:#fff6f5}
+
+/* FINAL KPI COLOUR SYSTEM */
+.kpis{gap:12px}
+.kpi{
+  position:relative;
+  overflow:hidden;
+  border:1px solid #d9dee7;
+  transition:transform .15s ease,box-shadow .15s ease;
+}
+.kpi:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(16,24,40,.10)}
+.kpi:after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:5px;
+}
+.kpi.best{background:linear-gradient(135deg,#ecfdf3 0%,#ffffff 72%);border-color:#a6f4c5}
+.kpi.best:after{background:#12b76a}
+.kpi.good{background:linear-gradient(135deg,#eff8ff 0%,#ffffff 72%);border-color:#b2ddff}
+.kpi.good:after{background:#2e90fa}
+.kpi.average{background:linear-gradient(135deg,#fffaeb 0%,#ffffff 72%);border-color:#fedf89}
+.kpi.average:after{background:#fdb022}
+.kpi.bad{background:linear-gradient(135deg,#fff6ed 0%,#ffffff 72%);border-color:#f9c28b}
+.kpi.bad:after{background:#f79009}
+.kpi.poor{background:linear-gradient(135deg,#fff1f0 0%,#ffffff 72%);border-color:#fda29b}
+.kpi.poor:after{background:#f04438}
+.kpi .sub{font-weight:700}
+.kpi b{font-size:25px}
+
+/* Machine matrix gets the same colour treatment */
+.machine-best td{background:#ecfdf3}
+.machine-good td{background:#eff8ff}
+.machine-average td{background:#fffaeb}
+.machine-bad td{background:#fff6ed}
+.machine-poor td{background:#fff1f0}
+
+/* Critical/major rows remain visually strong */
+tr.critical td{background:#fff1f0!important;border-left:3px solid #f04438}
+tr.major td{background:#fff8ed!important;border-left:3px solid #f79009}
+
+
+.analysis-key{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.analysis-key span{display:inline-block;width:18px;height:10px;border-radius:5px}
+.analysis-key .g{background:#12b76a}.analysis-key .b{background:#2e90fa}
+.analysis-key .y{background:#fdb022}.analysis-key .o{background:#f79009}
+.analysis-key .r{background:#f04438}
+
+
+.excel-float{
+  position:fixed;right:16px;bottom:18px;z-index:9998;
+  width:48px;height:48px;border-radius:50%;
+  border:0;background:#12b76a;color:#fff;font-size:24px;font-weight:900;
+  box-shadow:0 5px 18px rgba(16,24,40,.28);
+}
+.excel-float:active{transform:scale(.96)}
+.excel-modal{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(16,24,40,.55);padding:18px;
+}
+.excel-modal-card{
+  width:min(420px,100%);background:#fff;border-radius:18px;
+  padding:24px;position:relative;box-shadow:0 18px 55px rgba(16,24,40,.30);
+  text-align:center;
+}
+.excel-modal-icon{
+  width:52px;height:52px;border-radius:14px;background:#12b76a;color:#fff;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 10px;
+  font-size:26px;font-weight:900;
+}
+.excel-close{
+  position:absolute;right:10px;top:8px;border:0;background:transparent;
+  font-size:30px;color:#667085;line-height:1;
+}
+@media(max-width:600px){
+  .excel-float{right:12px;bottom:14px;width:46px;height:46px}
+}
+
+
+
+/* Final visual polish */
+.page{max-width:1440px;margin:0 auto;padding:18px}
+.panel{border:1px solid #e6eaf0;box-shadow:0 3px 14px rgba(16,24,40,.06)}
+.kpi-card{transition:transform .15s ease,box-shadow .15s ease}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(16,24,40,.10)}
+.tabs{box-shadow:0 2px 10px rgba(16,24,40,.05)}
+.tabs button{font-weight:800}
+button.primary{box-shadow:0 2px 7px rgba(16,24,40,.12)}
+table thead th{position:sticky;top:0;z-index:1}
+.notice{border-radius:10px}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="loginbox">
+    <h1>Maintenance System Login</h1>
+    <p>KM-1 • KM-2 • KM-3</p>
+    <input id="uid" placeholder="User ID" autocomplete="username">
+    <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
+    <button class="btn" style="width:100%" onclick="login()">Login</button>
+    <div id="loginMsg" style="color:#b42318;margin-top:8px"></div>
+    
+  </div>
+</div>
+
+<div id="app" style="display:none">
+<header>
+  <div class="head">
+    <div>
+      <div class="title">KM-1 • KM-2 • KM-3 Maintenance Control</div>
+      <div class="sub">Breakdown • Uptime • MTTR • MTBF • OEE • USDT • SDT</div>
+    </div>
+    <div class="actions">
+<button class="btn" onclick="openMachines()">Add / Manage Machines</button>
+      <button class="btn dark" onclick="logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" onclick="showPage('dashboard',this)">1. Main Dashboard</button>
+  <button class="tab" onclick="showPage('breakdown',this)">2. Breakdown Entry</button>
+  <button class="tab" onclick="showPage('performance',this)">3. Maintenance Performance</button>
+  <button class="tab" onclick="showPage('analysis',this)">4. KPI &amp; Major Downs</button>
+</nav>
+
+<!-- Small Excel export icon: available on every app page -->
+<button id="cloudFloatBtn" class="cloud-float" type="button" title="Cloud Sync" aria-label="Cloud Sync">☁</button>
+<button id="excelFloatBtn" class="excel-float" type="button" title="Update Excel Sheet" aria-label="Update Excel Sheet">▣</button>
+
+<div id="excelExportModal" class="excel-modal" style="display:none" role="dialog" aria-modal="true" aria-label="Update Excel Sheet">
+  <div class="excel-modal-card">
+    <button id="excelCloseBtn" class="excel-close" type="button" aria-label="Close">×</button>
+    <div class="excel-modal-icon">▣</div>
+    <h3>Update Excel Sheet</h3>
+    <div class="small sub">Export all breakdowns currently stored in the app into an Excel-compatible file.</div>
+    <button id="excelExportBtn" class="btn" type="button" style="width:100%;margin-top:14px">Update Excel Sheet</button>
+    <div id="excelExportStatus" class="small sub" style="margin-top:10px;text-align:center"></div>
+  </div>
+</div>
+
+<main>
+<div class="rb-sub">KM-1 • KM-2 • KM-3 | Breakdown • Reliability • Downtime • KPI</div>
+  </div>
+  <div class="report-badges"><span>MTTR</span><span>MTBF</span><span>OEE</span><span>USDT / SDT</span></div>
+</div>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="page active">
+  <div class="panel">
+    <div class="filters">
+      <div><label>Line</label><select id="dLine"><option value="">All 3 Lines</option><option>KM-1</option><option>KM-2</option><option>KM-3</option></select></div>
+      <div><label>Search machine</label><input id="dMachine" list="machineList" placeholder="Type machine name"></div>
+      <div><label>From</label><input id="dFrom" type="date"></div>
+      <div><label>To</label><input id="dTo" type="date"></div>
+      <div><label>Shift</label><select id="dShift"><option value="">All</option></select></div>
+      <div><label>Issue</label><select id="dLevel"><option value="">All</option><option>Critical</option><option>Major</option><option>Normal</option></select></div>
+      <div><label>Mode</label><select id="dMode"><option value="">All</option><option>USDT</option><option>SDT</option><option>Eng. Time</option><option>OEM</option></select></div>
+      <div style="display:flex;gap:7px;align-items:end"><button class="btn" style="flex:1" onclick="renderDashboard()">Search</button><button class="btn dark" style="flex:1" onclick="clearDashboard()">Clear</button></div>
+    </div>
+  </div>
+
+  <div id="dashKpis" class="kpis"></div>
+  <div id="lineCards" class="grid3"></div>
+  <div class="grid2">
+    <div class="panel"><b>Downtime by Line</b><div id="lineSummary"></div></div>
+    <div class="panel"><b>Downtime by Date</b><div id="dateSummary"></div></div>
+  </div>
+  <div class="panel">
+    <b>Machine Performance — all machines</b>
+    <div class="scroll"><table><thead><tr>
+      <th>Line</th><th>Machine</th><th>BD</th><th>DT h</th><th>Uptime %</th><th>MTTR h</th><th>MTBF h</th><th>USDT h</th><th>SDT h</th>
+    </tr></thead><tbody id="machineTable"></tbody></table></div>
+  </div>
+</section>
+
+<!-- BREAKDOWN -->
+<section id="breakdown" class="page">
+  <div class="panel">
+    <h2>Breakdown Entry</h2>
+    <div class="entry">
+      <div><label>Date</label><input id="bDate" type="date"></div>
+      <div><label>Line</label><select id="bLine"><option>KM-1</option><option>KM-2</option><option>KM-3</option></select></div>
+      <div><label>Shift</label><select id="bShift"><option>A</option><option>B</option><option>C</option><option>G</option></select></div>
+      <div><label>Machine</label><select id="bMachine"></select></div>
+      <div><label>Station</label><input id="bStation"></div>
+      <div><label>Mode</label><select id="bMode"><option>USDT</option><option>SDT</option><option>Eng. Time</option><option>OEM</option></select></div>
+      <div><label>Start</label><input id="bStart" type="time" step="1"></div>
+      <div><label>End</label><input id="bEnd" type="time" step="1"></div>
+      <div><label>Downtime min</label><input id="bDt" type="number" step="1"></div>
+      
+      
+      <div><label>Attended by</label><input id="bAttend" list="peopleList" placeholder="Search engineer"></div>
+      <div><label>Level</label><select id="bLevel"><option>Normal</option><option>Major</option><option>Critical</option></select></div>
+      <div><label>Status</label><select id="bStatus"><option>Open</option><option>Closed</option><option>Running ok</option></select></div>
+      <div style="grid-column:span 2"><label>Problem</label><textarea id="bProblem"></textarea></div>
+      <div style="grid-column:span 2"><label>Action</label><textarea id="bAction"></textarea></div>
+    </div>
+    <button class="btn" onclick="saveBreakdown()">Save Breakdown</button>
+    <span id="saveMsg" style="font-weight:800;margin-left:8px"></span>
+  </div>
+
+  <div class="panel">
+    <h3>Breakdown Search</h3>
+    <div class="filters">
+      <div><label>Machine</label><input id="bSearchMachine" list="machineList" placeholder="Search machine"></div>
+      <div><label>Attended by / Engineer</label><input id="bSearchEngineer" list="peopleList" placeholder="Search engineer"></div>
+      <div><label>Mode</label><select id="bSearchMode"><option value="">All</option><option>USDT</option><option>SDT</option><option>Eng. Time</option><option>OEM</option></select></div>
+      
+      <div><label>Issue</label><select id="bSearchLevel"><option value="">All</option><option>Critical</option><option>Major</option><option>Normal</option></select></div>
+      <div><label>Keyword</label><input id="bSearchKeyword" placeholder="Problem / action / station"></div>
+      <div><label>From</label><input id="bSearchFrom" type="date"></div>
+      <div><label>To</label><input id="bSearchTo" type="date"></div>
+      <div style="display:flex;gap:7px;align-items:end"><button class="btn" style="flex:1" onclick="renderBreakdown()">Search</button><button class="btn dark" style="flex:1" onclick="clearBreakdownSearch()">Clear</button></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Breakdown History <span id="breakCount" class="sub"></span></h3>
+    <div class="scroll"><table><thead><tr>
+      <th>Date</th><th>Line</th><th>Machine</th><th>Start</th><th>End</th><th>DT min</th><th>Mode</th><th>Problem</th><th>Action</th><th>Attended</th><th>Level</th>
+    </tr></thead><tbody id="breakdownTable"></tbody></table></div>
+  </div>
+</section>
+
+<!-- PERFORMANCE -->
+<section id="performance" class="page">
+  <div class="panel">
+    <h2>Maintenance Performance</h2>
+    <div class="filters">
+      <div><label>Line</label><select id="pLine"><option value="">All 3 Lines</option><option>KM-1</option><option>KM-2</option><option>KM-3</option></select></div>
+      <div><label>From</label><input id="pFrom" type="date"></div>
+      <div><label>To</label><input id="pTo" type="date"></div>
+    </div>
+  </div>
+  <div id="perfKpis" class="kpis"></div>
+  <div class="grid2">
+    <div class="panel"><h3>Machine Metrics</h3><div class="scroll"><table><thead><tr>
+      <th>Line</th><th>Machine</th><th>BD</th><th>Uptime</th><th>MTTR</th><th>MTBF</th><th>USDT</th><th>SDT</th>
+    </tr></thead><tbody id="perfMachineTable"></tbody></table></div></div>
+  </div>
+  <div class="panel">
+    <h3>Breakdown Search</h3>
+    <div class="filters">
+      <div><label>Machine</label><input id="pSearchMachine" list="machineList" placeholder="Search machine"></div>
+      <div><label>Attended by / Engineer</label><input id="pSearchEngineer" list="peopleList" placeholder="Search engineer"></div>
+      <div><label>Mode</label><select id="pSearchMode"><option value="">All</option><option>USDT</option><option>SDT</option><option>Eng. Time</option><option>OEM</option></select></div>
+      
+      <div><label>Issue</label><select id="pSearchLevel"><option value="">All</option><option>Critical</option><option>Major</option><option>Normal</option></select></div>
+      <div><label>Keyword</label><input id="pSearchKeyword" placeholder="Problem / action / station"></div>
+      <div style="display:flex;gap:7px;align-items:end"><button class="btn" style="flex:1" onclick="renderPerformance()">Search</button><button class="btn dark" style="flex:1" onclick="clearPerformanceSearch()">Clear</button></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Breakdown History <span id="perfHistoryCount" class="sub"></span></h3>
+    <div class="scroll"><table><thead><tr>
+      <th>Date</th><th>Line</th><th>Machine</th><th>Start</th><th>End</th><th>DT min</th><th>Mode</th><th>Problem</th><th>Action</th><th>Attended</th><th>Level</th>
+    </tr></thead><tbody id="historyTable"></tbody></table></div>
+  </div>
+  <div class="panel">
+    <h3>OEE Calculator</h3><div class="small sub">Enter production values to calculate OEE.</div>
+    <div class="entry">
+      <div><label>Planned h</label><input id="op" type="number" value="24"></div>
+      <div><label>Run h</label><input id="or" type="number"></div>
+      <div><label>Ideal cycle sec/part</label><input id="oc" type="number"></div>
+      <div><label>Total parts</label><input id="ot" type="number"></div>
+      <div><label>Good parts</label><input id="og" type="number"></div>
+    </div>
+    <button class="btn" onclick="calcOEE()">Calculate OEE</button>
+    <div id="oeeResult" style="margin-top:10px"></div>
+    <div class="warn small">The supplied breakdown Excel does not contain the production quantity / good quantity / ideal cycle fields required for automatic OEE. Use this calculator when those production values are available.</div>
+  </div>
+</section>
+
+<section id="analysis" class="page">
+  <div class="panel">
+    <h2>KPI Summary &amp; Breakdown Analysis</h2>
+    <div class="small sub">Management view of maintenance performance and the main breakdown drivers.</div><div class="analysis-key"><span class="g"></span><span class="b"></span><span class="y"></span><span class="o"></span><span class="r"></span></div>
+  </div>
+
+  <div id="analysisKpis" class="kpis"></div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>Top Machines by Downtime</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Rank</th><th>Line</th><th>Machine</th><th>Breakdowns</th><th>Downtime h</th><th>Uptime</th></tr></thead>
+          <tbody id="topMachinesTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Top Major Down Issues</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Rank</th><th>Issue / Problem</th><th>Events</th><th>Downtime h</th><th>% Downtime</th></tr></thead>
+          <tbody id="topIssuesTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>Major &amp; Critical Breakdowns</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Date</th><th>Line</th><th>Machine</th><th>Downtime h</th><th>Issue</th><th>Level</th></tr></thead>
+          <tbody id="majorCriticalTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Line Summary</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Line</th><th>Breakdowns</th><th>Downtime h</th><th>Uptime</th><th>MTTR</th><th>MTBF</th></tr></thead>
+          <tbody id="lineSummaryTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<div id="machineModal" class="modal">
+  <div class="modalbox">
+    <h2>Add / Manage Machines</h2>
+    <div class="entry">
+      <div><label>Line</label><select id="mLine"><option>KM-1</option><option>KM-2</option><option>KM-3</option></select></div>
+      <div><label>Machine</label><input id="mName"></div>
+      <div><label>Criticality</label><select id="mCrit"><option>Normal</option><option>Major</option><option>Critical</option></select></div>
+    </div>
+    <button class="btn" onclick="addMachine()">Save Machine</button>
+    <button class="btn dark" onclick="closeMachines()">Close</button>
+    <div class="scroll" style="margin-top:12px"><table><thead><tr><th>Line</th><th>Machine</th><th>Criticality</th></tr></thead><tbody id="masterTable"></tbody></table></div>
+  </div>
+</div>
+
+<datalist id="machineList"></datalist>
+<datalist id="peopleList"></datalist>
+
+<script>
+const INITIAL = [{"id": "KM-2-2026-08-01-L6F2-0", "date": "2026-08-01", "line": "KM-2", "shift": "B", "machine": "L6F2", "station": "Chamber-1", "problem": "vaccum pump oil seal damage", "activity": "new oil seal replace then running ok", "start": "04:30:00", "end": "05:00:00", "dt_min": 30.0, "dt_hr": 0.5, "mode": "USDT", "status": "", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-01-JB Potting-1-1", "date": "2026-08-01", "line": "KM-2", "shift": "B", "machine": "JB Potting-1", "station": "JB Potting Hand", "problem": "JB potting Y3 axis potting overflow", "activity": "change parameter then runningb ok", "start": "06:10:00", "end": "06:30:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "SDT", "status": "", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-01-L6F1-2", "date": "2026-08-01", "line": "KM-2", "shift": "B", "machine": "L6F1", "station": "Chamber-2", "problem": "vaccum pump venting plat brocken", "activity": "new venting plat replece than running ok", "start": "06:30:00", "end": "07:00:00", "dt_min": 30.0, "dt_hr": 0.5, "mode": "USDT", "status": "Running ok", "attend": "sushant /jayesh /aditya", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-01-Auto Junction Box Soldering-3-3", "date": "2026-08-01", "line": "KM-2", "shift": "B", "machine": "Auto Junction Box Soldering-3", "station": "", "problem": "auto JB soldering machine 3 water leackage", "activity": "chenge soldering coil charge but Soldering not done. Charge controller", "start": "07:35:00", "end": "11:00:00", "dt_min": 215.0, "dt_hr": 3.5833333333333335, "mode": "SDT", "status": "", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-01-Auto JB Caping Machine-4", "date": "2026-08-01", "line": "KM-2", "shift": "B", "machine": "Auto JB Caping Machine", "station": "", "problem": "continue bvibrator vibrating", "activity": "1.chenge cable connection 2.chenge vibrator communacation cable but problem not solved by pass machine.", "start": "08:30:00", "end": "09:00:00", "dt_min": 30.0, "dt_hr": 0.5, "mode": "SDT", "status": "", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-01-Curing Loader & unloader-5", "date": "2026-08-01", "line": "KM-2", "shift": "C", "machine": "Curing Loader & unloader", "station": "", "problem": "Curing line loading gantry stopper loose", "activity": "Curing line loading gantry stopper tight", "start": "04:40:00", "end": "04:50:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Praveen Tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-01-Auto Junction Box Soldering-3-6", "date": "2026-08-01", "line": "KM-2", "shift": "C", "machine": "Auto Junction Box Soldering-3", "station": "", "problem": "Right side coil Phase error coming", "activity": "Right side coil change all parameter adjust then running ok", "start": "11:00:00", "end": "02:00:00", "dt_min": 180.0, "dt_hr": 3.0, "mode": "SDT", "status": "Running ok", "attend": "Praveen Tyagi , Chittaranjan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-01-Curing Loader & unloader-7", "date": "2026-08-01", "line": "KM-2", "shift": "C", "machine": "Curing Loader & unloader", "station": "", "problem": "Curing line unloader initialisation issue", "activity": "Curing unloading gantry manually take safe position & reinitialise then running ok", "start": "11:10:00", "end": "11:20:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Praveen Tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-01-Contact Block Placing Machine-8", "date": "2026-08-01", "line": "KM-2", "shift": "C", "machine": "Contact Block Placing Machine", "station": "", "problem": "Contact block placing machine robot error", "activity": "Robot manually take safe position & reinitialise then running ok", "start": "11:35:00", "end": "11:45:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Praveen Tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-Auto Edge Sealing-3-9", "date": "2026-08-02", "line": "KM-2", "shift": "A", "machine": "Auto Edge Sealing-3", "station": "", "problem": "( Machine not initilized ) Randomly axis value change and sp3 forming cylinder and read switch not working and tape feeding cylinder and read switch not working .", "activity": "All axis value has been disturb so we have adjusted the value and after trial taken but same issue occurred the we hwve fine taking then thw sp1 and sp3 axis then machine running ok and read switch adjust and running ok.", "start": "08:38:00", "end": "11:30:00", "dt_min": 172.0, "dt_hr": 2.8666666666666667, "mode": "USDT", "status": "Running ok", "attend": "vivek,mayuresh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-L4F1-10", "date": "2026-08-02", "line": "KM-2", "shift": "A", "machine": "L4F1", "station": "", "problem": "L4F1,L5F2,L6F1 or L6F2 Vacuum pump oil level low", "activity": "fill oil level pump NO-50,51,3,11,19,16,73 And 74", "start": "09:00:00", "end": "10:00:00", "dt_min": 60.0, "dt_hr": 1.0, "mode": "SDT", "status": "Running ok", "attend": "KRISHNA,HITESH", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-JB fixing-11", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "JB fixing", "station": "", "problem": "Continous NG coming", "activity": "change left and right installation jb pck position parameter", "start": "03:00:00", "end": "03:45:00", "dt_min": 45.0, "dt_hr": 0.75, "mode": "Eng. Time", "status": "Running ok", "attend": "jc team / mt", "production_loss": 0, "engineer_hr": 0.75, "engineer_type": "Engineer Time", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-1ST EVA Cutting & Placing Machine-12", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "1ST EVA Cutting & Placing Machine", "station": "", "problem": "km2 glass conveyor [overhead] air connection located at km1 area so mistekly turned off the km2 air connection instead of km1 that’s why this issue happened", "activity": "currently we have started the line", "start": "04:00:00", "end": "04:10:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "", "status": "running okk", "attend": "jayesh dhule", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-EPE slip Cutting & Barcode Labelling Machine-13", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "EPE slip Cutting & Barcode Labelling Machine", "station": "Patch cutting and placing", "problem": "epe pacth not properly", "activity": "epe parameter change than running ok", "start": "04:02:00", "end": "04:04:00", "dt_min": 2.0, "dt_hr": 0.03333333333333333, "mode": "USDT", "status": "Running ok", "attend": "jayesh patil / bharat", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-EPE slip Cutting & Barcode Labelling Machine-14", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "EPE slip Cutting & Barcode Labelling Machine", "station": "Patch cutting and placing", "problem": "epe pacth not properly", "activity": "epe parameter change than running ok", "start": "04:02:00", "end": "04:04:00", "dt_min": 2.0, "dt_hr": 0.03333333333333333, "mode": "USDT", "status": "Running ok", "attend": "jayesh / bharat", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-2ND EVA Cutting & Placing Machine-15", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "2ND EVA Cutting & Placing Machine", "station": "EVA Cutting and placing unit", "problem": "aligment issue", "activity": "manualy aligment properly set then running ok", "start": "04:15:00", "end": "04:20:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "SDT", "status": "Running ok", "attend": "sushant /jayesh patil \\", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-Auto Taping-4-16", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "Auto Taping-4", "station": "Taping ARM", "problem": "crack on cell", "activity": "hand 1 and hand 2 position up then running ok", "start": "06:32:00", "end": "06:37:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Running ok", "attend": "jayesh patil / bharat", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-Auto Corner Filling-17", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "Auto Corner Filling", "station": "", "problem": "Corner filling not properly", "activity": "Module cross coming in machine that’s why alignment disturb , mechanically alignment done then running ok", "start": "07:20:00", "end": "08:20:00", "dt_min": 60.0, "dt_hr": 1.0, "mode": "SDT", "status": "", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-JB Potting-1-18", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "JB Potting-1", "station": "", "problem": "Y3 axis potting nozzle leak", "activity": "Y3 axis potting cylinder tightting then running ok", "start": "07:50:00", "end": "08:00:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "SDT", "status": "Running ok", "attend": "vivek , prashant , adesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-1ST EVA Cutting & Placing Machine-19", "date": "2026-08-02", "line": "KM-2", "shift": "B", "machine": "1ST EVA Cutting & Placing Machine", "station": "EVA Cutting and placing unit", "problem": "aligment stopper damage", "activity": "2 nos stopper replec and aligment manualy chack then running ok", "start": "08:00:00", "end": "08:10:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "SDT", "status": "Running ok", "attend": "anand/jayesh dhule", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-Busbar Correction-20", "date": "2026-08-02", "line": "KM-2", "shift": "C", "machine": "Busbar Correction", "station": "", "problem": "Right side lead shaping cylinder bearing damage also lead shaping blade damage", "activity": "Replace with KM3 line middle lead shaping cylinder also 2 nos. lead shaping blade change", "start": "05:07:00", "end": "05:22:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Chittaranjan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-Auto Edge Sealing-3-21", "date": "2026-08-02", "line": "KM-2", "shift": "C", "machine": "Auto Edge Sealing-3", "station": "", "problem": "sp 3 tap[e cylender reed switch issue", "activity": "SP-3 tape cylinder reed switch adjusted and fix", "start": "05:30:00", "end": "05:45:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "hiren", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-Contact Block Removing-22", "date": "2026-08-02", "line": "KM-2", "shift": "C", "machine": "Contact Block Removing", "station": "", "problem": "JB wire removing gripper teplon pad damage", "activity": "JB wire removing teplon pad change", "start": "11:53:00", "end": "12:15:00", "dt_min": 22.0, "dt_hr": 0.36666666666666664, "mode": "USDT", "status": "Running ok", "attend": "Kishore, Vedant", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-02-Auto Edge Sealing-3-23", "date": "2026-08-02", "line": "KM-2", "shift": "C", "machine": "Auto Edge Sealing-3", "station": "", "problem": "sp -03 & sp 01 forming cylendert probalm", "activity": "sp 03 & sp 01 froming cylender change & adjust", "start": "07:12:00", "end": "12:45:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "pranit nikhil", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto Edge Sealing-4-24", "date": "2026-08-03", "line": "KM-2", "shift": "A", "machine": "Auto Edge Sealing-4", "station": "Taping ARM", "problem": "SP4 forming cylinder issue", "activity": "Forming cylinder mechanincal adjustment done then running ok", "start": "01:50:00", "end": "02:05:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Akshay/Bharat", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto Framing-3-25", "date": "2026-08-03", "line": "KM-2", "shift": "A", "machine": "Auto Framing-3", "station": "Gluing Head", "problem": "RTV gap issue ,Drum change issue,machine not clean proprly by operator", "activity": "We clean the machine and drum change then machine running ok", "start": "07:45:00", "end": "08:05:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Anjan/kunal", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto Edge Sealing-3-26", "date": "2026-08-03", "line": "KM-2", "shift": "A", "machine": "Auto Edge Sealing-3", "station": "Taping ARM", "problem": "SP3 Cutter cylinder reed switch issue", "activity": "Cylinder reed switvh replace with new one then its running ok", "start": "11:00:00", "end": "11:10:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Bharat/Kishor", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto JB Caping Machine-27", "date": "2026-08-03", "line": "KM-2", "shift": "A", "machine": "Auto JB Caping Machine", "station": "Others", "problem": "The stopper cylinder connector broken issue", "activity": "replace the new one connector then running ok", "start": "11:30:00", "end": "11:35:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Anjan Chanda", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto Edge Protector-28", "date": "2026-08-03", "line": "KM-2", "shift": "A", "machine": "Auto Edge Protector", "station": "Corner paper pick and place", "problem": "Module stuck", "activity": "Manualy origin position and rest then running ok", "start": "12:00:00", "end": "12:10:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Anjan Chanda", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto Edge Sealing-3-29", "date": "2026-08-03", "line": "KM-2", "shift": "B", "machine": "Auto Edge Sealing-3", "station": "Taping ARM", "problem": "short side cylinder not extended and sp-2 molding cylinder issue and sp-3 feeding cylinder issue", "activity": "short side cylinder read swicth adjusted and sp-2 modling cylinder stopper adjusted and sp-3 feeding cylinder adjusted than running ok", "start": "06:35:00", "end": "06:45:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Jayesh patil", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-JB fixing-30", "date": "2026-08-03", "line": "KM-2", "shift": "B", "machine": "JB fixing", "station": "JB pick and placing unit", "problem": "Jb fixing machine stop without any alarm & CCD Continues NG Positive JB", "activity": "After Initialize front transit not home, and no alarm showing manually front tansit clamp open close then ok Remove All positive JB and put new JB in bin then runnig issue", "start": "07:20:00", "end": "08:00:00", "dt_min": 40.0, "dt_hr": 0.6666666666666666, "mode": "USDT", "status": "RUNNING OK", "attend": "OMKAR /VIVEEK/ PRASHANT \\ADESH", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto Edge Sealing-3-31", "date": "2026-08-03", "line": "KM-2", "shift": "B", "machine": "Auto Edge Sealing-3", "station": "", "problem": "sp-1 tap not properly stick", "activity": "tap pressing roller adjusted than running ok", "start": "08:15:00", "end": "08:19:00", "dt_min": 4.0, "dt_hr": 0.06666666666666667, "mode": "USDT", "status": "running ok", "attend": "jayesh dhule", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto Edge Sealing-3-32", "date": "2026-08-03", "line": "KM-2", "shift": "B", "machine": "Auto Edge Sealing-3", "station": "Taping ARM", "problem": "Cylinder issue", "activity": "Formong cylinder issue .", "start": "", "end": "", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "running ok", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-JB fixing-33", "date": "2026-08-03", "line": "KM-2", "shift": "B", "machine": "JB fixing", "station": "JB pick and placing unit", "problem": "JB not sense issue", "activity": "JB not getting sense due to mixup materil of long and short tie length", "start": "15:00:00", "end": "15:40:00", "dt_min": 40.0, "dt_hr": 0.6666666666666666, "mode": "USDT", "status": "running ok", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-03-Auto Framing-3-34", "date": "2026-08-03", "line": "KM-2", "shift": "C", "machine": "Auto Framing-3", "station": "Framing Main Bed and assembly unit", "problem": "Framing- 3 Randomly frame gap issue", "activity": "Framing bed clean & parameter adjust then running ok", "start": "03:40:00", "end": "03:55:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Praveen Tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-04-Conveyor Master C1-35", "date": "2026-08-04", "line": "KM-2", "shift": "B", "machine": "Conveyor Master C1", "station": "Master Control panel C-1", "problem": "C41 auto edge protecter rotation conveyor not work", "activity": "Enable mes setting then rotating conyeor runnig", "start": "05:10:00", "end": "05:30:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Under JC Team", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-04-Auto JB Caping Machine-36", "date": "2026-08-04", "line": "KM-2", "shift": "B", "machine": "Auto JB Caping Machine", "station": "Robot ARM", "problem": "jb capping machine middle jb cap not place propely", "activity": "Adjust robot parameter the placing proprly middle jb cap", "start": "05:50:00", "end": "06:10:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Under JC Team", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-04-Curing Loader & unloader-37", "date": "2026-08-04", "line": "KM-2", "shift": "B", "machine": "Curing Loader & unloader", "station": "Curing un-Loading hand", "problem": "curing gantry loading not working", "activity": "clear poe material and initilize gantry", "start": "07:10:00", "end": "07:20:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-04-Auto Corner Filling-38", "date": "2026-08-04", "line": "KM-2", "shift": "B", "machine": "Auto Corner Filling", "station": "Corner Grinding Unit", "problem": "Corner filling not properly", "activity": "clear servo drive alarm and proper allignment then runnig ok", "start": "07:30:00", "end": "07:45:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Omkar Shinde", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-04-Auto Back Labelling-39", "date": "2026-08-04", "line": "KM-2", "shift": "C", "machine": "Auto Back Labelling", "station": "Nameplate and Barcode Hand", "problem": "Receving platform movment home alarm", "activity": "Stuck data lable remove from ST1 printer roller & Machine reinitialise", "start": "11:00:00", "end": "11:15:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Chittaranjan Kurwe", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-05-L6F2-40", "date": "2026-08-05", "line": "KM-2", "shift": "A", "machine": "L6F2", "station": "Chamber-2", "problem": "solenide valve air leckige", "activity": "Solenide value change then running ok", "start": "09:20:00", "end": "09:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Bharat janu Bangare", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-05-L6F1-41", "date": "2026-08-05", "line": "KM-2", "shift": "A", "machine": "L6F1", "station": "Chamber-2", "problem": "L6 F1 chamber 2 vacm issue", "activity": "found chamber membran sheet repiar then running ok", "start": "08:10:00", "end": "09:00:00", "dt_min": 50.0, "dt_hr": 0.8333333333333334, "mode": "USDT", "status": "Running ok", "attend": "Samadhan Shelke", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-05-Auto Taping-4-42", "date": "2026-08-05", "line": "KM-2", "shift": "A", "machine": "Auto Taping-4", "station": "Taping ARM", "problem": "doubble tape issue", "activity": "auto tapping recipy change then running ok", "start": "11:30:00", "end": "11:44:00", "dt_min": 14.0, "dt_hr": 0.23333333333333334, "mode": "USDT", "status": "Running ok", "attend": "Mahendra Kamalakar Pingala", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-05-Conveyor Master C1-43", "date": "2026-08-05", "line": "KM-2", "shift": "B", "machine": "Conveyor Master C1", "station": "Master Control panel C-1", "problem": "C14 Conveyor module Lifting UP both reed swith found broken", "activity": "So both reed switch changed then ok", "start": "04:35:00", "end": "04:45:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Pravesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-05-Auto Framing-4-44", "date": "2026-08-05", "line": "KM-2", "shift": "C", "machine": "Auto Framing-4", "station": "Gantry (Frame pickup and drop manipulator)", "problem": "Framing gantry short frame detection senssor not working randomly", "activity": "Short frame detection photoelectric senssor position set then running ok", "start": "05:10:00", "end": "05:30:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Praveen Tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Auto Edge Sealing-4-45", "date": "2026-08-06", "line": "KM-2", "shift": "A", "machine": "Auto Edge Sealing-4", "station": "", "problem": "HAND 1 TAPE NOT PROPARLY", "activity": "Forming cylinder air preser set then running ok", "start": "09:40:00", "end": "09:50:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Tejas Thakur", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-IV Tester-46", "date": "2026-08-06", "line": "KM-2", "shift": "A", "machine": "IV Tester", "station": "Post-Lam", "problem": "Frequncy converter buffer(golden buffer)", "activity": "Power on off and buffer initilize then running ok", "start": "02:20:00", "end": "02:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "", "status": "Running ok", "attend": "Anjan Chanda", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Auto Junction Box Soldering-3-47", "date": "2026-08-06", "line": "KM-2", "shift": "A", "machine": "Auto Junction Box Soldering-3", "station": "Post-Lam", "problem": "Soldring coil leakege", "activity": "Ccil change from km1/km2", "start": "07:15:00", "end": "07:30:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Anjan Chanda", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Auto Edge Sealing-4-48", "date": "2026-08-06", "line": "KM-2", "shift": "A", "machine": "Auto Edge Sealing-4", "station": "", "problem": "HAND 1 TAPE NOT PROPARLY", "activity": "Forming cylinder air preser set then running ok", "start": "09:40:00", "end": "09:50:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Bharat janu Bangare", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Super Impose KM-2-49", "date": "2026-08-06", "line": "KM-2", "shift": "B", "machine": "Super Impose KM-2", "station": "Glass alignement and CV", "problem": "After module alingment cell crack issue", "activity": "manualy alingment stoper adjust then ok", "start": "07:30:00", "end": "07:35:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Jayesh patil", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Auto Taping-4-50", "date": "2026-08-06", "line": "KM-2", "shift": "B", "machine": "Auto Taping-4", "station": "Taping ARM", "problem": "tape fold issue", "activity": "tape guide strip adjusted tape holding area alingh than running ok", "start": "05:30:00", "end": "05:40:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "jayesh patil / bharat", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Curing Loader & unloader-51", "date": "2026-08-06", "line": "KM-2", "shift": "B", "machine": "Curing Loader & unloader", "station": "Post-Lam", "problem": "saftey sensor follen down", "activity": "one stack manully unload and then start in Auto Mode", "start": "22:30:00", "end": "22:50:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "Eng. Time", "status": "Running ok", "attend": "Omkar Shinde", "production_loss": 0, "engineer_hr": 0.3333333333333333, "engineer_type": "Engineer Time", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-L6F2-52", "date": "2026-08-06", "line": "KM-2", "shift": "B", "machine": "L6F2", "station": "Chamber-2", "problem": "vaccum leakage issue", "activity": "2ND chamber membrane replacement done", "start": "05:30:00", "end": "11:00:00", "dt_min": 330.0, "dt_hr": 5.5, "mode": "SDT", "status": "Running ok", "attend": "Omkar Shinde", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Curing Loader & unloader-53", "date": "2026-08-06", "line": "KM-2", "shift": "C", "machine": "Curing Loader & unloader", "station": "Post-Lam", "problem": "Curring line keep moving forword even through 1 module is present on conveyor due to that safety sensor was triggered repeatedly.", "activity": "Manually module unload and start,Sensor range setting done, reflector sensor position set then running ok", "start": "12:25: 01:20", "end": "12:40 01:32", "dt_min": 27.0, "dt_hr": 0.45, "mode": "USDT", "status": "Running ok", "attend": "Deven Kashinath Wajekar", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Auto Corner Filling-54", "date": "2026-08-06", "line": "KM-2", "shift": "C", "machine": "Auto Corner Filling", "station": "Post-Lam", "problem": "Corner filing belt was stuck randomly", "activity": "Belt was found damage/slipped internaly so belt change then running ok", "start": "02:15:00", "end": "02:25:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Akshay Kamble", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-06-Auto Sorter-3-55", "date": "2026-08-06", "line": "KM-2", "shift": "C", "machine": "Auto Sorter-3", "station": "Post-Lam", "problem": "Robot stuck due to reverse module come at 27 no stack position ans robot initialization failed on tray 2&6", "activity": "Robot manualy taken to safe position and 2&6 no try trolley remove and refixed then initialize run ok", "start": "06:30:00", "end": "06:50:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Akshay Kamble", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-2ND EVA Cutting & Placing Machine-56", "date": "2026-08-07", "line": "KM-2", "shift": "A", "machine": "2ND EVA Cutting & Placing Machine", "station": "EVA Cutting and placing unit", "problem": "Alingment issue", "activity": "side alingment parameter change and maunaly alingment done then running ok", "start": "11:00:00", "end": "11:20:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Bharat janu Bangare", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Conveyor Master A2-57", "date": "2026-08-07", "line": "KM-2", "shift": "A", "machine": "Conveyor Master A2", "station": "Master Control panel A-2", "problem": "A2 - 81 rotation conveyor loss its origion position value", "activity": "Reset the origion value and veriad the operation machine is working normaly", "start": "09:15:00", "end": "09:30:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Praveshkumar Katre", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-JB fixing-58", "date": "2026-08-07", "line": "KM-2", "shift": "A", "machine": "JB fixing", "station": "JB loading tray and 3D Robot ARM", "problem": "Continue NG Positive & neagetive Side", "activity": "3D Camera softwer on & machine reinitialise & Jb Clear than Running ok", "start": "08:25:00", "end": "08:40:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Anjan Chanda", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Auto Edge Sealing-3-59", "date": "2026-08-07", "line": "KM-2", "shift": "A", "machine": "Auto Edge Sealing-3", "station": "Taping ARM", "problem": "S-S gap Issue", "activity": "tap possition teaching as per process team", "start": "12:00:00", "end": "12:15:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "SDT", "status": "Running ok", "attend": "Anil Kammar", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Auto Edge Sealing-4-60", "date": "2026-08-07", "line": "KM-2", "shift": "A", "machine": "Auto Edge Sealing-4", "station": "Taping ARM", "problem": "S-S gap Issue", "activity": "tap possition teaching as per process team", "start": "12:15:00", "end": "12:25:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "SDT", "status": "Running ok", "attend": "Anil Kammar", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Auto Corner Trimming-61", "date": "2026-08-07", "line": "KM-2", "shift": "B", "machine": "Auto Corner Trimming", "station": "Corner Trimming unit", "problem": "Module corner not trim properly", "activity": "LH side Corner triming blade position change", "start": "07:35:00", "end": "07:42:00", "dt_min": 7.0, "dt_hr": 0.11666666666666667, "mode": "USDT", "status": "USDT", "attend": "Chittaranjan Kurwe", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Auto Edge Sealing-4-62", "date": "2026-08-07", "line": "KM-2", "shift": "B", "machine": "Auto Edge Sealing-4", "station": "", "problem": "sp-3 tape issue", "activity": "sp-3 tape holder change", "start": "09:15:00", "end": "09:27:00", "dt_min": 12.0, "dt_hr": 0.2, "mode": "USDT", "status": "Running ok", "attend": "Omkar Shinde", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Auto Sorter-3-63", "date": "2026-08-07", "line": "KM-2", "shift": "C", "machine": "Auto Sorter-3", "station": "Robot ARM", "problem": "Robot stuck due to limit triggred and observed gap between modules due to 3 to 4 corner flap applied by auto edge protector m/c", "activity": "Robot manualy taken to safe position, Corner protectorn machine vacume cup adjusted to avoid picking multiple flap", "start": "11:22:00", "end": "11:40:00", "dt_min": 18.0, "dt_hr": 0.3, "mode": "USDT", "status": "Running ok", "attend": "Akshay Kamble", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Auto Sorter-3-64", "date": "2026-08-07", "line": "KM-2", "shift": "C", "machine": "Auto Sorter-3", "station": "Robot ARM", "problem": "Robot stuck due to reverse module come at 27 no stack position. Programming issue", "activity": "Robot manually take safe position & reinitialise then running ok", "start": "12:53:00", "end": "01:03:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Deven Kashinath Wajekar", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Auto Edge Protector-65", "date": "2026-08-07", "line": "KM-2", "shift": "C", "machine": "Auto Edge Protector", "station": "Post-Lam", "problem": "Area 2 cylinder flap not getting pickup", "activity": "reed swhitch aadjust Mchine initialize then runing ok", "start": "11:50:00", "end": "00:00:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Tushar Dalvi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-07-Auto Edge Trimming-66", "date": "2026-08-07", "line": "KM-2", "shift": "C", "machine": "Auto Edge Trimming", "station": "Edge trimming axis unit", "problem": "feed side 2 no blade home position alarm", "activity": "all blade home position & feed side blade no 2 reed swhitch aadjust Mchine initialize then runing ok", "start": "02:44:00", "end": "02:54:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Chirag Dhule", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-90 Degree Visual Inspection front-67", "date": "2026-08-08", "line": "KM-2", "shift": "A", "machine": "90 Degree Visual Inspection front", "station": "90 deg Pick and flipping arm", "problem": "Module not moving forward", "activity": "Manually One module forward front and back side Reinitialize then Runnig ok", "start": "07:01:00", "end": "07:10:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "Adesh Maruti Patil", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-Auto Taping-3-68", "date": "2026-08-08", "line": "KM-2", "shift": "A", "machine": "Auto Taping-3", "station": "Tapping Arm", "problem": "Hand Tape not cut properly issue", "activity": "Cutting blade change then ok", "start": "01:05:00", "end": "01:15:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Anand", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-Contact Block Placing Machine-69", "date": "2026-08-08", "line": "KM-2", "shift": "A", "machine": "Contact Block Placing Machine", "station": "Robot ARM", "problem": "Robot not placing contact b;ock connector propely", "activity": "check all cylinder work or home manually then found reed switch not working", "start": "12:00:00", "end": "12:28:00", "dt_min": 28.0, "dt_hr": 0.4666666666666667, "mode": "USDT", "status": "Running bypass", "attend": "Aditya gaikwad", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-Auto Edge Trimming-70", "date": "2026-08-08", "line": "KM-2", "shift": "B", "machine": "Auto Edge Trimming", "station": "Edge trimming axis unit", "problem": "Module edge not trim properly", "activity": "Left & Right side trimming blade position adjust & flow set then running ok", "start": "04:40:00", "end": "05:00:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Runnig OK", "attend": "Praveen Tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-Contact Block Placing Machine-71", "date": "2026-08-08", "line": "KM-2", "shift": "B", "machine": "Contact Block Placing Machine", "station": "Post-Lam", "problem": "Downward pressure charging block limit cylinder origin alarm", "activity": "Downward pressure charging block limit cylinder reed switch set & robot reinitialise then running ok", "start": "07:25:00", "end": "07:40:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Runnig OK", "attend": "Runnig OK", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-TPT Cutting & Placing Machine-72", "date": "2026-08-08", "line": "KM-2", "shift": "B", "machine": "TPT Cutting & Placing Machine", "station": "", "problem": "tpt conveyor not forward", "activity": "tpt conveyor photo electric sensor position change & adjusted", "start": "03:30:00", "end": "03:45:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Runnig OK", "attend": "omkar pranit", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-Busbar Correction-73", "date": "2026-08-08", "line": "KM-2", "shift": "B", "machine": "Busbar Correction", "station": "Post-Lam", "problem": "Middle lead shaping blade worn out ( left Side )", "activity": "Middle left side lead shaping blade change", "start": "10:05:00", "end": "10:10:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "", "status": "Runnig OK", "attend": "Chittaranjan Kurwe", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-Contact Block Placing Machine-74", "date": "2026-08-08", "line": "KM-2", "shift": "C", "machine": "Contact Block Placing Machine", "station": "Robot ARM", "problem": "Downward pressure charging block limit cylinder origin alarm, Cylinder reed switch foulty", "activity": "Reed switch change then running ok", "start": "11:20:00", "end": "11:40:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Runnig OK", "attend": "devn wajekar/akshay kambale/Krushna", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-08-Auto Junction Box Soldering-3-75", "date": "2026-08-08", "line": "KM-2", "shift": "C", "machine": "Auto Junction Box Soldering-3", "station": "JB Soldering Head", "problem": "Soldering not proper on negative JB", "activity": "Ceramic pin change and Y axis parameters setting done", "start": "05:50:00", "end": "06:15:00", "dt_min": 25.0, "dt_hr": 0.4166666666666667, "mode": "USDT", "status": "Runnig OK", "attend": "Tushar/chirag", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-09-Conveyor Master A2-76", "date": "2026-08-09", "line": "KM-2", "shift": "A", "machine": "Conveyor Master A2", "station": "", "problem": "Conveyor no. 92 open & close gate guide rail come out the bearing and mounting loose", "activity": "bearing remove and Re-fixed guide rail properly and mounting bolt tight then properly work", "start": "10:35:00", "end": "10:45:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "Jayesh Patil / sushant", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-09-Auto Framing-3-77", "date": "2026-08-09", "line": "KM-2", "shift": "B", "machine": "Auto Framing-3", "station": "Framing Main Bed and assembly unit", "problem": "Framing -3 randomly corner gap issue in AB side & also servo torque error", "activity": "AB side delay adjust & pressing parameter set then running ok", "start": "06:30:00", "end": "06:50:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Runnig OK", "attend": "Chittaranjan Kurwe", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-09-JB fixing-78", "date": "2026-08-09", "line": "KM-2", "shift": "B", "machine": "JB fixing", "station": "Post-Lam", "problem": "M1-ST05 elevator shooting induction abnormal information alarm", "activity": "Elevator photoelectric senssor position set then running ok", "start": "07:01:00", "end": "07:09:00", "dt_min": 8.0, "dt_hr": 0.13333333333333333, "mode": "USDT", "status": "Runnig OK", "attend": "Praveen Tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-09-Auto Glass Loader Top(Front)-79", "date": "2026-08-09", "line": "KM-2", "shift": "B", "machine": "Auto Glass Loader Top(Front)", "station": "", "problem": "1st glass loader pallet photoelectric senssor broken", "activity": "Photoelectric senssor replace from KM3 1st glass loader", "start": "08:30:00", "end": "08:35:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "SDT", "status": "Runnig OK", "attend": "Nikhil Patil", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-09-Auto Corner Trimming-80", "date": "2026-08-09", "line": "KM-2", "shift": "B", "machine": "Auto Corner Trimming", "station": "Corner Trimming unit", "problem": "Module corner not trim properly", "activity": "Corner trimming blade alignment done then running ok", "start": "09:05:00", "end": "09:10:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Runnig OK", "attend": "Chittaranjan Kurwe", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-09-JB Potting-1-81", "date": "2026-08-09", "line": "KM-2", "shift": "C", "machine": "JB Potting-1", "station": "Post-Lam", "problem": "Y3 Potting glue leakage", "activity": "Valve adjustment was carried out.the pipe ,valve & nozzle were also replaced then running ok", "start": "05:10:00", "end": "05:45:00", "dt_min": 35.0, "dt_hr": 0.5833333333333334, "mode": "USDT", "status": "Runnig OK", "attend": "anjan/pravesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-09-Conveyor Master B2-82", "date": "2026-08-09", "line": "KM-2", "shift": "A", "machine": "Conveyor Master B2", "station": "Pre-Lam", "problem": "B2 56 Conveyor rotating issue", "activity": "after origin running ok", "start": "10:35:00", "end": "10:45:00", "dt_min": 0.0, "dt_hr": 0.0, "mode": "", "status": "Runnig OK", "attend": "", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-10-Auto Junction Box Soldering-3-83", "date": "2026-08-10", "line": "KM-2", "shift": "A", "machine": "Auto Junction Box Soldering-3", "station": "Post-Lam", "problem": "middile head soldering not proper", "activity": "machine clean and parameter adjust then running", "start": "03:22:00", "end": "03:32:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-10-JB Potting-1-84", "date": "2026-08-10", "line": "KM-2", "shift": "C", "machine": "JB Potting-1", "station": "", "problem": "Y3 potting nozzle lekage issue", "activity": "valve setting adjust and flow adjust but proble not reslove", "start": "12:15:00", "end": "12:30:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Runnig OK", "attend": "tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-10-Auto Edge Trimming-85", "date": "2026-08-10", "line": "KM-2", "shift": "C", "machine": "Auto Edge Trimming", "station": "", "problem": "Right side trimming not propeerly done", "activity": "Right side blade adjust and flow adjust then ok", "start": "05:20:00", "end": "05:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "Pravesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-11-Auto Edge Trimming-86", "date": "2026-08-11", "line": "KM-2", "shift": "B", "machine": "Auto Edge Trimming", "station": "", "problem": "Eva proper not cutting", "activity": "Blade adjust then running ok", "start": "06:10:00", "end": "06:15:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Runnig OK", "attend": "chitranjan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-11-2ND EVA Cutting & Placing Machine-87", "date": "2026-08-11", "line": "KM-2", "shift": "C", "machine": "2ND EVA Cutting & Placing Machine", "station": "EVA Cutting and placing unit", "problem": "punching hole mismatch", "activity": "adjust the manualy glass alignment and punching length parameter change then running ok", "start": "04:40:00", "end": "04:50:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "Bharat \\ pradip", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-12-Conveyor Master B2-88", "date": "2026-08-12", "line": "KM-2", "shift": "A", "machine": "Conveyor Master B2", "station": "", "problem": "After framing rotational conveyor arm bolts loose", "activity": "All bolts tighening done", "start": "07:30:00", "end": "07:45:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Runnig OK", "attend": "prashant pranit tushar", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-12-Auto Edge Trimming-89", "date": "2026-08-12", "line": "KM-2", "shift": "A", "machine": "Auto Edge Trimming", "station": "", "problem": "Due to excess POE cutter cylinder not operate fully and reed switch not come", "activity": "Reed switch set then running ok", "start": "09:30:00", "end": "09:40:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "adesh aditya pranay", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-12-Auto Edge Trimming-90", "date": "2026-08-12", "line": "KM-2", "shift": "B", "machine": "Auto Edge Trimming", "station": "", "problem": "Left side aligner home position error alarm", "activity": "Left side aligner cylinder reed switch set & flow adjust then running ok", "start": "04:50:00", "end": "05:00:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "Chittaranjan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-12-Conveyor Master B2-91", "date": "2026-08-12", "line": "KM-2", "shift": "C", "machine": "Conveyor Master B2", "station": "", "problem": "B2-56 rotation conveyor rotation unit stuck", "activity": "Rotation unit position was adjust", "start": "05:40:00", "end": "05:55:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Runnig OK", "attend": "Anjan pravesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-13-Auto Sorter-4-92", "date": "2026-08-13", "line": "KM-2", "shift": "A", "machine": "Auto Sorter-4", "station": "Robot Arm", "problem": "Communication cable shorted,servo origin lost", "activity": "Communication cable change work in progress", "start": "01:30:00", "end": "03:00:00", "dt_min": 90.0, "dt_hr": 1.5, "mode": "USDT", "status": "Work under progress", "attend": "Prashant", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-13-JB fixing-93", "date": "2026-08-13", "line": "KM-2", "shift": "A", "machine": "JB fixing", "station": "", "problem": "Machine not initialize without any alarm stop", "activity": "Clear all JB gripper and axis home position then running ok", "start": "01:30:00", "end": "02:00:00", "dt_min": 30.0, "dt_hr": 0.5, "mode": "USDT", "status": "Runnig OK", "attend": "Prashant", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-13-Auto Tape Removing-94", "date": "2026-08-13", "line": "KM-2", "shift": "A", "machine": "Auto Tape Removing", "station": "Tape remove Hand", "problem": "hand 2 gripper cylinder reed switch issue", "activity": "Hand bypass", "start": "12:20:00", "end": "12:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "Prashant", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-13-Auto Sorter-4-95", "date": "2026-08-13", "line": "KM-2", "shift": "B", "machine": "Auto Sorter-4", "station": "Robot Arm", "problem": "Power cable shorted/Damage,servo origin lost", "activity": "Power cable changed trail taken then running ok.", "start": "03:00:00", "end": "05:30:00", "dt_min": 150.0, "dt_hr": 2.5, "mode": "USDT", "status": "Runnig OK", "attend": "Anil Kammar/Akshay", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-14-L4F2-96", "date": "2026-08-14", "line": "KM-2", "shift": "B", "machine": "L4F2", "station": "Main control panel", "problem": "module stuck in c stack", "activity": "c stack alingment corrected then running", "start": "19:00:00", "end": "20:10:00", "dt_min": 70.0, "dt_hr": 1.1666666666666667, "mode": "USDT", "status": "Runnig OK", "attend": "tyagi /thushar", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-14-Curing Loader & unloader-97", "date": "2026-08-14", "line": "KM-2", "shift": "B", "machine": "Curing Loader & unloader", "station": "Curing Loading hand", "problem": "vaccume issue", "activity": "module manualy remove then running ok", "start": "17:20:00", "end": "17:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "tyagi", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-14-Auto Taping-3-98", "date": "2026-08-14", "line": "KM-2", "shift": "C", "machine": "Auto Taping-3", "station": "Glass alignement and CV", "problem": "Module not forword to A2-55 to Tapping", "activity": "So we check douking signal that time found connection loose so connected properly and also found limit switch malfuctioning so we replaced the switch .Again machine itialise issue so we check that time found servo motor battery alarm come so reset the alarm and turn off and on the machine and intialise then running ok", "start": "03:20:00", "end": "05:00:00", "dt_min": 100.0, "dt_hr": 1.6666666666666667, "mode": "USDT", "status": "Runnig OK", "attend": "Pradip,pravesh,anjan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-14-Auto Junction Box Soldering-3-99", "date": "2026-08-14", "line": "KM-2", "shift": "C", "machine": "Auto Junction Box Soldering-3", "station": "JB Soldering Head", "problem": "Soldering not proper on negative JB", "activity": "SO ceramic pin found broken remove from KM-1 and fixed KM-2 soldering machine", "start": "02:10:00", "end": "02:15:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Runnig OK", "attend": "kunal", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-15-2ND EVA Cutting & Placing Machine-100", "date": "2026-08-15", "line": "KM-2", "shift": "B", "machine": "2ND EVA Cutting & Placing Machine", "station": "Roll Loading and soldering unit", "problem": "EVE roal up-dowun lifter issue we found cable cut", "activity": "cable correction done then running ok", "start": "05:15:00", "end": "05:30:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Runnig OK", "attend": "mahendra,bharat ' tejash", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-16-Auto Framing-3-101", "date": "2026-08-16", "line": "KM-2", "shift": "B", "machine": "Auto Framing-3", "station": "Framing Main Bed and assembly unit", "problem": "Short side pin lock issue", "activity": "Rear channel frame align cylinder adjust then running ok", "start": "07:15:00", "end": "07:25:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "Pravesh / kunal", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-16-Auto Glass Loader Top(Front)-102", "date": "2026-08-16", "line": "KM-2", "shift": "C", "machine": "Auto Glass Loader Top(Front)", "station": "Glass Hand Left", "problem": "Paper clamping cylinder not getting actuate and stuck while clamping the paper", "activity": "Paper clamping cylinder air flow increase and Guide rod cleaning done then runing ok", "start": "12:35:00", "end": "12:44:00", "dt_min": 9.0, "dt_hr": 0.15, "mode": "USDT", "status": "Runnig OK", "attend": "Darpan/Jayesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-17-Auto Taping-4-103", "date": "2026-08-17", "line": "KM-2", "shift": "B", "machine": "Auto Taping-4", "station": "Taping ARM", "problem": "tep on cell issue", "activity": "all hand cutting blade replacement and vaccum cap cleaning done then machine running ok", "start": "06:20:00", "end": "06:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "BHARAT", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-17-Auto Taping-3-104", "date": "2026-08-17", "line": "KM-2", "shift": "B", "machine": "Auto Taping-3", "station": "Taping ARM", "problem": "tap cutting issue", "activity": "all hand cutting blade properly adjustment and vaccum cap cleaning done then machine running ok", "start": "07:15:00", "end": "07:30:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Runnig OK", "attend": "Mahendra", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-17-Auto Junction Box Soldering-3-105", "date": "2026-08-17", "line": "KM-2", "shift": "B", "machine": "Auto Junction Box Soldering-3", "station": "JB Soldering Head", "problem": "1) Soldring no - 3 soldring not proprly done 2) no:1 soldring coil found leakage", "activity": "1) No:03 ceramic pin changed 2)soldring coil changed", "start": "10:00:00", "end": "10:20:00", "dt_min": 20.0, "dt_hr": 0.3333333333333333, "mode": "USDT", "status": "Runnig OK", "attend": "Pravesh / kunal", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-18-Auto Framing-4-106", "date": "2026-08-18", "line": "KM-2", "shift": "A", "machine": "Auto Framing-4", "station": "Gluing area", "problem": "Gluing area frame detection photoelectric senssor broken due to frame stuck in transplant Y", "activity": "Stuck frame remove & new photoelectri senssor fixed", "start": "10:05:00", "end": "10:10:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "SDT", "status": "Runnig OK", "attend": "Chittaranjan , Vedant", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-18-Auto Framing-3-107", "date": "2026-08-18", "line": "KM-2", "shift": "A", "machine": "Auto Framing-3", "station": "Gantry (Frame pickup and drop manipulator)", "problem": "Framing gantry short frame detection photoelectric senssor disturb", "activity": "Photoelectric senssor position set then running ok", "start": "01:05:00", "end": "01:10:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Runnig OK", "attend": "Chittaranjan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-18-Auto Taping-3-108", "date": "2026-08-18", "line": "KM-2", "shift": "B", "machine": "Auto Taping-3", "station": "Taping ARM", "problem": "auto tapping was using 65 tapes reduced it to 56", "activity": "auto tapping was using 65 tapes reduced it to 56", "start": "17:20:00", "end": "17:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "SDT", "status": "Runnig OK", "attend": "pradip / bharat", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-18-Auto Corner Filling-109", "date": "2026-08-18", "line": "KM-2", "shift": "B", "machine": "Auto Corner Filling", "station": "Corner Grinding Unit", "problem": "corner Filing Bellt Damage .", "activity": "New Belt Replaced Then Running Ok.", "start": "18:05:00", "end": "18:15:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "kunal", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-19-Auto Framing-3-110", "date": "2026-08-19", "line": "KM-2", "shift": "B", "machine": "Auto Framing-3", "station": "Gluing Head", "problem": "Nozzle-1 glue was not dispesing", "activity": "The pcf unit and mastic valve were checked no air supply was found at the valve due to an air pipe issue the air pipe adjust and the glue dispensing was restored machine running ok", "start": "09:20:00", "end": "09:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "omkar/ Pravesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-19-Auto Junction Box Soldering-3-111", "date": "2026-08-19", "line": "KM-2", "shift": "B", "machine": "Auto Junction Box Soldering-3", "station": "JB Soldering Head", "problem": "Soldring hand -01 soldring head needed replacment and the cersmic pin was found damaged", "activity": "The damaged ceramic pin was replaced and the soldring valve was reset after adjusment the machine was running normally", "start": "06:40:00", "end": "06:50:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Runnig OK", "attend": "omkar /Pravesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-20-Conveyor Master A2-112", "date": "2026-08-20", "line": "KM-2", "shift": "A", "machine": "Conveyor Master A2", "station": "", "problem": "Conveor A2-69 Feed protection sensor fall down", "activity": "Sensor reffiting done then running ok", "start": "12:50:00", "end": "01:00:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Akshay/Hitesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-20-Conveyor Master A2-113", "date": "2026-08-20", "line": "KM-2", "shift": "A", "machine": "Conveyor Master A2", "station": "", "problem": "Conveor A2-69 Feed protection sensor problem", "activity": "Sensor mounting bolt thread warn out due to that sensor position disturbed temporary correction done", "start": "01:20:00", "end": "01:35:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "Rahul/Kishor", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-20-L5F2-114", "date": "2026-08-20", "line": "KM-2", "shift": "B", "machine": "L5F2", "station": "Chamber-2", "problem": "oil pump trip issue", "activity": "we found oil pump motor colling fan burn and motor shaft stuck so we replaced motor from lam 3 F1 2nd chamber", "start": "03:00:00", "end": "05:20:00", "dt_min": 140.0, "dt_hr": 2.3333333333333335, "mode": "USDT", "status": "Running ok", "attend": "Pradeep ,kunal, Vrushabh,pratik", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-20-Auto Back Labelling-115", "date": "2026-08-20", "line": "KM-2", "shift": "B", "machine": "Auto Back Labelling", "station": "", "problem": "ST-2 Name plate solenoid valve air connecter found damage", "activity": "So air connecter changed", "start": "04:20:00", "end": "04:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "SDT", "status": "Running ok", "attend": "pravesh", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-20-L5F1-116", "date": "2026-08-20", "line": "KM-2", "shift": "B", "machine": "L5F1", "station": "", "problem": "Chember 1 oil pump tripping issue", "activity": "power connection loose found , tighten and dummy cycle taken", "start": "03:00:00", "end": "03:40:00", "dt_min": 40.0, "dt_hr": 0.6666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Pradeep ,kunal, Vrushabh,pratik", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-20-2ND EVA Cutting & Placing Machine-117", "date": "2026-08-20", "line": "KM-2", "shift": "C", "machine": "2ND EVA Cutting & Placing Machine", "station": "EVA Cutting and placing unit", "problem": "hotmelt issue", "activity": "melting strip change", "start": "12:30:00", "end": "12:45:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "anand/ jayesh patil /darpan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-20-2ND EVA Cutting & Placing Machine-118", "date": "2026-08-20", "line": "KM-2", "shift": "C", "machine": "2ND EVA Cutting & Placing Machine", "station": "EVA Cutting and placing unit", "problem": "gripper clamping issue", "activity": "found gripper clamping asembly loose asembly tight then running ok", "start": "01:45:00", "end": "02:00:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "anand/ jayesh patil /darpan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-20-Auto Framing-3-119", "date": "2026-08-20", "line": "KM-2", "shift": "C", "machine": "Auto Framing-3", "station": "", "problem": "RTV gap issue", "activity": "change some parameter then running ok", "start": "01:00:00", "end": "01:05:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Running ok", "attend": "````````````````````````````````````", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-21-Contact Block Placing Machine-120", "date": "2026-08-21", "line": "KM-2", "shift": "B", "machine": "Contact Block Placing Machine", "station": "", "problem": "The block clamping cylinder air connecter was found broken", "activity": "The U-type air connecter was replacement ,the reed switch was not detecting ,so the machine was temporarily bypassed.regulator type air commecter was then installed,and the machine was running", "start": "04:00:00", "end": "04:27:00", "dt_min": 27.0, "dt_hr": 0.45, "mode": "USDT", "status": "Running ok", "attend": "anil,Pravesh,pradeep,", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-21-Contact Block Placing Machine-121", "date": "2026-08-21", "line": "KM-2", "shift": "B", "machine": "Contact Block Placing Machine", "station": "", "problem": "Block clamping cylinder y16 reed switch not come", "activity": "The y16 reed switch failed to detect.the machine was temporarily bypassed,the reed switch was replaced,running ok", "start": "05:15:00", "end": "05:30:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "USDT", "status": "Running ok", "attend": "anil,Pravesh,pradeep,", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-21-Auto Edge Trimming-122", "date": "2026-08-21", "line": "KM-2", "shift": "C", "machine": "Auto Edge Trimming", "station": "", "problem": "Module side align cylinder reed switch disturb", "activity": "Cylinder reed switch set & tight then running ok", "start": "01:05:00", "end": "01:11:00", "dt_min": 6.0, "dt_hr": 0.1, "mode": "USDT", "status": "Running ok", "attend": "Moazzam", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-21-Conveyor Master B2-123", "date": "2026-08-21", "line": "KM-2", "shift": "C", "machine": "Conveyor Master B2", "station": "", "problem": "Rotation conveyor B2-56 origin position loss", "activity": "Rotation conveyor origin position set then running ok", "start": "02:09:00", "end": "02:14:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Chittaranjan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-21-Auto Junction Box Soldering-3-124", "date": "2026-08-21", "line": "KM-2", "shift": "C", "machine": "Auto Junction Box Soldering-3", "station": "", "problem": "JB not soldering properly", "activity": "JB soldering coil clean properly & ceramic pin fixed properly then running ok", "start": "02:55:00", "end": "03:00:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Moazzam", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-21-Contact Block Removing-125", "date": "2026-08-21", "line": "KM-2", "shift": "C", "machine": "Contact Block Removing", "station": "", "problem": "Extension & Retraction movement point timeout (X22) alarm", "activity": "Pneumatic pipe came out from cylinder connector also connector found damage so connector change & Pneumatic pipe fixed then running ok", "start": "04:31:00", "end": "04:36:00", "dt_min": 5.0, "dt_hr": 0.08333333333333333, "mode": "USDT", "status": "Running ok", "attend": "Chittaranjan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-22-1ST EVA Cutting & Placing Machine-126", "date": "2026-08-22", "line": "KM-2", "shift": "B", "machine": "1ST EVA Cutting & Placing Machine", "station": "EVA Roll Loading and soldering unit", "problem": "hotmelt issue beacose melting strip is out of the luge", "activity": "melting strip adjust", "start": "05:20:00", "end": "05:30:00", "dt_min": 10.0, "dt_hr": 0.16666666666666666, "mode": "USDT", "status": "Running ok", "attend": "Anand / Darpan", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}, {"id": "KM-2-2026-08-22-Auto Back Labelling-127", "date": "2026-08-22", "line": "KM-2", "shift": "B", "machine": "Auto Back Labelling", "station": "", "problem": "After Roll Change machine not reinitallised & ST01 platform receving cylinder reed switch abnormal &^ carbon roll stuck in ST01", "activity": "Reed switch adjusted & carbon roll stick removed then machine reinitiallised then running ok", "start": "05:45:00", "end": "06:00:00", "dt_min": 15.0, "dt_hr": 0.25, "mode": "Eng. Time", "status": "Running ok", "attend": "Under JC Team", "production_loss": 0, "engineer_hr": 0.25, "engineer_type": "Engineer Time", "criticality": "Normal"}, {"id": "KM-2-2026-08-23-L5F1-128", "date": "2026-08-23", "line": "KM-2", "shift": "B", "machine": "L5F1", "station": "", "problem": "laminator L5F1 loading and sensor issue", "activity": "check proximitry sensor adjust range but still problem", "start": "04:00:00", "end": "07:00:00", "dt_min": 40.0, "dt_hr": 0.6666666666666666, "mode": "USDT", "status": "Pending", "attend": "anil\\prashant\\sushant", "production_loss": 0, "engineer_hr": 0, "engineer_type": "", "criticality": "Normal"}];
+const MASTER = {"KM-1": {"Auto Glass Loader Top-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Glass Loader Bottom-1": {"line": "KM-1", "criticality": "Normal"}, "EVA Cutting & Placing Machine-1 KM-1": {"line": "KM-1", "criticality": "Normal"}, "EVA Flattening & Soldering-1 KM-1": {"line": "KM-1", "criticality": "Normal"}, "Bussing AOI KM-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Taping-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Taping-2": {"line": "KM-1", "criticality": "Normal"}, "EPE slip Auto Trimming & Barcode Labelling Machine-1": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-30": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-31": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-32": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-33": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-82": {"line": "KM-1", "criticality": "Normal"}, "EVA Cutting & Placing Machine-2 KM-1": {"line": "KM-1", "criticality": "Normal"}, "EVA Cutting & Placing Machine-3 KM-1": {"line": "KM-1", "criticality": "Normal"}, "Lead Flattening Machine KM-1": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-64": {"line": "KM-1", "criticality": "Normal"}, "Super Impos KM-1": {"line": "KM-1", "criticality": "Normal"}, "Double Glass Repair Manipulator-1 KM-1": {"line": "KM-1", "criticality": "Normal"}, "Double Glass Repair Manipulator-2 KM-1": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-137": {"line": "KM-1", "criticality": "Normal"}, "Pre-EL 1": {"line": "KM-1", "criticality": "Normal"}, "Pre-EL 2": {"line": "KM-1", "criticality": "Normal"}, "Auto Edge Sealing-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Edge Sealing-2": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-118": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-101": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-104": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-135": {"line": "KM-1", "criticality": "Normal"}, "Buffer A1-136": {"line": "KM-1", "criticality": "Normal"}, "Buffer B1-4": {"line": "KM-1", "criticality": "Normal"}, "Buffer B1-5": {"line": "KM-1", "criticality": "Normal"}, "Auto Tape Removing-1": {"line": "KM-1", "criticality": "Normal"}, "Buffer B1-22": {"line": "KM-1", "criticality": "Normal"}, "Auto Edge Trimming-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Edge Trimming-2": {"line": "KM-1", "criticality": "Normal"}, "Post-EL 1": {"line": "KM-1", "criticality": "Normal"}, "90 Degree Visual Inspection-1": {"line": "KM-1", "criticality": "Normal"}, "Buffer B1-6": {"line": "KM-1", "criticality": "Normal"}, "90 Degree Visual Inspection-2": {"line": "KM-1", "criticality": "Normal"}, "Buffer B1-93": {"line": "KM-1", "criticality": "Normal"}, "Busbar Correction-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Junction Box Soldering-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Junction Box Soldering-2": {"line": "KM-1", "criticality": "Normal"}, "Junction Box Photo Inspection Machine-1": {"line": "KM-1", "criticality": "Normal"}, "JB Potting-1": {"line": "KM-1", "criticality": "Normal"}, "Frame Inspection-1": {"line": "KM-1", "criticality": "Normal"}, "Buffer-": {"line": "KM-1", "criticality": "Normal"}, "Curing Line-1": {"line": "KM-1", "criticality": "Normal"}, "Buffer C1-3": {"line": "KM-1", "criticality": "Normal"}, "Auto Corner Filling-1": {"line": "KM-1", "criticality": "Normal"}, "Auto JB Caping Machine-1": {"line": "KM-1", "criticality": "Normal"}, "Contact Block Placing Machine-1": {"line": "KM-1", "criticality": "Normal"}, "Module Cleaning-1": {"line": "KM-1", "criticality": "Normal"}, "IV Pot Tester-1": {"line": "KM-1", "criticality": "Normal"}, "IV Tester-1": {"line": "KM-1", "criticality": "Normal"}, "HI-POT Test-1": {"line": "KM-1", "criticality": "Normal"}, "Component Turn Over Unit KM-1": {"line": "KM-1", "criticality": "Normal"}, "Conveyor KM-1": {"line": "KM-1", "criticality": "Normal"}, "Final EL-1": {"line": "KM-1", "criticality": "Normal"}, "Contact Block Removing-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Back Labelling-1": {"line": "KM-1", "criticality": "Normal"}, "RFID Station-1": {"line": "KM-1", "criticality": "Normal"}, "Final Visual Inspection-1": {"line": "KM-1", "criticality": "Normal"}, "Buffer C1-61": {"line": "KM-1", "criticality": "Normal"}, "Auto Edge Protector-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Sorter-1 KM-1": {"line": "KM-1", "criticality": "Normal"}, "Auto Sorter-2 KM-1": {"line": "KM-1", "criticality": "Normal"}, "Gantry A1-104": {"line": "KM-1", "criticality": "Normal"}, "Gantry A1-112": {"line": "KM-1", "criticality": "Normal"}, "Manipulator A1-104": {"line": "KM-1", "criticality": "Normal"}, "Manipulator A1-117": {"line": "KM-1", "criticality": "Normal"}, "Gantry A1-107": {"line": "KM-1", "criticality": "Normal"}, "Gantry A1-111": {"line": "KM-1", "criticality": "Normal"}, "Manipulator A1-100": {"line": "KM-1", "criticality": "Normal"}, "Manipulator A1-103": {"line": "KM-1", "criticality": "Normal"}}, "KM-2": {"Auto Glass Loader Top-2": {"line": "KM-2", "criticality": "Normal"}, "Auto Glass Loader Bottom-2": {"line": "KM-2", "criticality": "Normal"}, "EVA Cutting & Placing Machine-1 KM-2": {"line": "KM-2", "criticality": "Normal"}, "EVA Flattening & Soldering-1 KM-2": {"line": "KM-2", "criticality": "Normal"}, "Bussing AOI KM-2": {"line": "KM-2", "criticality": "Normal"}, "Auto Taping-3": {"line": "KM-2", "criticality": "Normal"}, "Auto Taping-4": {"line": "KM-2", "criticality": "Normal"}, "EPE slip Auto Trimming & Barcode Labelling Machine-2": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-30": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-31": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-32": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-33": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-151": {"line": "KM-2", "criticality": "Normal"}, "EVA Cutting & Placing Machine-2 KM-2": {"line": "KM-2", "criticality": "Normal"}, "Lead Flattening Machine KM-2": {"line": "KM-2", "criticality": "Normal"}, "Super Impos KM-2": {"line": "KM-2", "criticality": "Normal"}, "Double Glass Repair Manipulator-1 A2-122 KM-2": {"line": "KM-2", "criticality": "Normal"}, "Double Glass Repair Manipulator-2 A2-117 KM-2": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-82": {"line": "KM-2", "criticality": "Normal"}, "PRE-EL 3": {"line": "KM-2", "criticality": "Normal"}, "PRE-EL 4": {"line": "KM-2", "criticality": "Normal"}, "Auto Edge Sealing-3": {"line": "KM-2", "criticality": "Normal"}, "Auto Edge Sealing-4": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2- 101": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-104": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-118": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-121": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-137": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-135": {"line": "KM-2", "criticality": "Normal"}, "Buffer A2-136": {"line": "KM-2", "criticality": "Normal"}, "Auto Tape Removing-2": {"line": "KM-2", "criticality": "Normal"}, "Buffer": {"line": "KM-2", "criticality": "Normal"}, "Auto Edge Trimming-3": {"line": "KM-2", "criticality": "Normal"}, "Auto Edge Trimming-4": {"line": "KM-2", "criticality": "Normal"}, "Post-EL 2": {"line": "KM-2", "criticality": "Normal"}, "90 Degree Visual Inspection-3": {"line": "KM-2", "criticality": "Normal"}, "Buffer B2-93": {"line": "KM-2", "criticality": "Normal"}, "90 Degree Visual Inspection-4": {"line": "KM-2", "criticality": "Normal"}, "Busbar Correction-2": {"line": "KM-2", "criticality": "Normal"}, "Auto Junction Box Soldering-3": {"line": "KM-2", "criticality": "Normal"}, "Auto Junction Box Soldering-4": {"line": "KM-2", "criticality": "Normal"}, "Junction Box Photo Inspection Machine-2": {"line": "KM-2", "criticality": "Normal"}, "JB Potting-2": {"line": "KM-2", "criticality": "Normal"}, "Frame Inspection-2": {"line": "KM-2", "criticality": "Normal"}, "Curing Line-2": {"line": "KM-2", "criticality": "Normal"}, "Buffer C2-3": {"line": "KM-2", "criticality": "Normal"}, "Auto Corner Filling-2": {"line": "KM-2", "criticality": "Normal"}, "Auto JB Caping Machine -2": {"line": "KM-2", "criticality": "Normal"}, "Contact Block Placing Machine-2": {"line": "KM-2", "criticality": "Normal"}, "Module Cleaning-2": {"line": "KM-2", "criticality": "Normal"}, "IV Pot Tester-2": {"line": "KM-2", "criticality": "Normal"}, "IV Tester-2": {"line": "KM-2", "criticality": "Normal"}, "HI-POT Test-2": {"line": "KM-2", "criticality": "Normal"}, "Component Turn Over Unit C2-19 KM-2": {"line": "KM-2", "criticality": "Normal"}, "Conveyor KM-2": {"line": "KM-2", "criticality": "Normal"}, "Final EL-2": {"line": "KM-2", "criticality": "Normal"}, "Contact Block Removing-2": {"line": "KM-2", "criticality": "Normal"}, "Auto Back Labelling-2": {"line": "KM-2", "criticality": "Normal"}, "RFID Station-2": {"line": "KM-2", "criticality": "Normal"}, "Final Visual Inspection-2": {"line": "KM-2", "criticality": "Normal"}, "Buffer C1-61": {"line": "KM-2", "criticality": "Normal"}, "Auto Edge Protector-2": {"line": "KM-2", "criticality": "Normal"}, "Component Turn Over Unit KM-2": {"line": "KM-2", "criticality": "Normal"}, "Auto Sorter-3 KM-2": {"line": "KM-2", "criticality": "Normal"}, "Auto Sorter-4 KM-2": {"line": "KM-2", "criticality": "Normal"}, "Gantry A2-107": {"line": "KM-2", "criticality": "Normal"}, "Gantry A2-111": {"line": "KM-2", "criticality": "Normal"}, "Manipulator A2-100": {"line": "KM-2", "criticality": "Normal"}, "Manipulator A2-103": {"line": "KM-2", "criticality": "Normal"}, "Gantry A2-108": {"line": "KM-2", "criticality": "Normal"}, "Gantry A2-112": {"line": "KM-2", "criticality": "Normal"}, "L6F2": {"line": "KM-2", "criticality": "Normal"}, "JB Potting-1": {"line": "KM-2", "criticality": "Normal"}, "L6F1": {"line": "KM-2", "criticality": "Normal"}, "Auto JB Caping Machine": {"line": "KM-2", "criticality": "Normal"}, "Curing Loader & unloader": {"line": "KM-2", "criticality": "Normal"}, "Contact Block Placing Machine": {"line": "KM-2", "criticality": "Normal"}, "L4F1": {"line": "KM-2", "criticality": "Normal"}, "JB fixing": {"line": "KM-2", "criticality": "Normal"}, "1ST EVA Cutting & Placing Machine": {"line": "KM-2", "criticality": "Normal"}, "EPE slip Cutting & Barcode Labelling Machine": {"line": "KM-2", "criticality": "Normal"}, "2ND EVA Cutting & Placing Machine": {"line": "KM-2", "criticality": "Normal"}, "Auto Corner Filling": {"line": "KM-2", "criticality": "Normal"}, "Busbar Correction": {"line": "KM-2", "criticality": "Normal"}, "Contact Block Removing": {"line": "KM-2", "criticality": "Normal"}, "Auto Framing-3": {"line": "KM-2", "criticality": "Normal"}, "Auto Edge Protector": {"line": "KM-2", "criticality": "Normal"}, "Conveyor Master C1": {"line": "KM-2", "criticality": "Normal"}, "Auto Back Labelling": {"line": "KM-2", "criticality": "Normal"}, "Auto Framing-4": {"line": "KM-2", "criticality": "Normal"}, "IV Tester": {"line": "KM-2", "criticality": "Normal"}, "Super Impose KM-2": {"line": "KM-2", "criticality": "Normal"}, "Auto Sorter-3": {"line": "KM-2", "criticality": "Normal"}, "Conveyor Master A2": {"line": "KM-2", "criticality": "Normal"}, "Auto Corner Trimming": {"line": "KM-2", "criticality": "Normal"}, "Auto Edge Trimming": {"line": "KM-2", "criticality": "Normal"}, "90 Degree Visual Inspection front": {"line": "KM-2", "criticality": "Normal"}, "TPT Cutting & Placing Machine": {"line": "KM-2", "criticality": "Normal"}, "Auto Glass Loader Top(Front)": {"line": "KM-2", "criticality": "Normal"}, "Conveyor Master B2": {"line": "KM-2", "criticality": "Normal"}, "Auto Sorter-4": {"line": "KM-2", "criticality": "Normal"}, "Auto Tape Removing": {"line": "KM-2", "criticality": "Normal"}, "L4F2": {"line": "KM-2", "criticality": "Normal"}, "L5F2": {"line": "KM-2", "criticality": "Normal"}, "L5F1": {"line": "KM-2", "criticality": "Normal"}}, "KM-3": {"Auto Glass Loader Top-3": {"line": "KM-3", "criticality": "Normal"}, "Auto Glass Loader Bottom-3": {"line": "KM-3", "criticality": "Normal"}, "EVA Cutting & Placing Machine-1 KM-3": {"line": "KM-3", "criticality": "Normal"}, "EVA Flattening & Soldering-1 KM-3": {"line": "KM-3", "criticality": "Normal"}, "Bussing AOI KM-3": {"line": "KM-3", "criticality": "Normal"}, "Auto Taping-5": {"line": "KM-3", "criticality": "Normal"}, "Auto Taping-6": {"line": "KM-3", "criticality": "Normal"}, "EPE slip Auto Trimming & Barcode Labelling Machine-3": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-30": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-31": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-32": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-64": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-118": {"line": "KM-3", "criticality": "Normal"}, "EVA Cutting & Placing Machine-2 KM-3": {"line": "KM-3", "criticality": "Normal"}, "EVA Cutting & Placing Machine-3 KM-3": {"line": "KM-3", "criticality": "Normal"}, "Lead Flattening Machine KM-3": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-33": {"line": "KM-3", "criticality": "Normal"}, "Super Imports KM_3": {"line": "KM-3", "criticality": "Normal"}, "Double Glass Repair Manipulator-1 A3-100 KM-3": {"line": "KM-3", "criticality": "Normal"}, "Double Glass Repair Manipulator-2 A3-103 KM-3": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-121": {"line": "KM-3", "criticality": "Normal"}, "Pre-EL 5": {"line": "KM-3", "criticality": "Normal"}, "Pre-EL 6": {"line": "KM-3", "criticality": "Normal"}, "Auto Edge Sealing-5": {"line": "KM-3", "criticality": "Normal"}, "Auto Edge Sealing-6": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-101": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-104": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-135": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-136": {"line": "KM-3", "criticality": "Normal"}, "Buffer A3-137": {"line": "KM-3", "criticality": "Normal"}, "Buffer B3-3": {"line": "KM-3", "criticality": "Normal"}, "Buffer B3-4": {"line": "KM-3", "criticality": "Normal"}, "Buffer B3-5": {"line": "KM-3", "criticality": "Normal"}, "Auto Tape Removing-3": {"line": "KM-3", "criticality": "Normal"}, "Buffer B2-5": {"line": "KM-3", "criticality": "Normal"}, "Auto Edge Trimming-5": {"line": "KM-3", "criticality": "Normal"}, "Auto Edge Trimming-6": {"line": "KM-3", "criticality": "Normal"}, "Post-EL 3": {"line": "KM-3", "criticality": "Normal"}, "90 Degree Visual Inspection-5": {"line": "KM-3", "criticality": "Normal"}, "Buffer B3-31": {"line": "KM-3", "criticality": "Normal"}, "90 Degree Visual Inspection-6": {"line": "KM-3", "criticality": "Normal"}, "Buffer B3-35": {"line": "KM-3", "criticality": "Normal"}, "Busbar Correction-3": {"line": "KM-3", "criticality": "Normal"}, "Auto Junction Box Soldering-5": {"line": "KM-3", "criticality": "Normal"}, "Auto Junction Box Soldering-6": {"line": "KM-3", "criticality": "Normal"}, "Junction Box Photo Inspection Machine-3": {"line": "KM-3", "criticality": "Normal"}, "JB Potting-3": {"line": "KM-3", "criticality": "Normal"}, "Frame Inspection-3": {"line": "KM-3", "criticality": "Normal"}, "Buffer B2-88": {"line": "KM-3", "criticality": "Normal"}, "Curing Line-3": {"line": "KM-3", "criticality": "Normal"}, "Buffer C3-4": {"line": "KM-3", "criticality": "Normal"}, "Auto Corner Filling-3": {"line": "KM-3", "criticality": "Normal"}, "Auto JB Caping Machine-3": {"line": "KM-3", "criticality": "Normal"}, "Contact Block Placing Machine-3": {"line": "KM-3", "criticality": "Normal"}, "Module Cleaning-3": {"line": "KM-3", "criticality": "Normal"}, "IV Pot Tester-3": {"line": "KM-3", "criticality": "Normal"}, "IV Tester-3": {"line": "KM-3", "criticality": "Normal"}, "HI-POT Test-3": {"line": "KM-3", "criticality": "Normal"}, "Component Turn Over Unit KM-3": {"line": "KM-3", "criticality": "Normal"}, "Conveyor KM-3": {"line": "KM-3", "criticality": "Normal"}, "Final EL-3": {"line": "KM-3", "criticality": "Normal"}, "Contact Block Removing-3": {"line": "KM-3", "criticality": "Normal"}, "Auto Back Labelling-3": {"line": "KM-3", "criticality": "Normal"}, "RFID Station-3": {"line": "KM-3", "criticality": "Normal"}, "Final Visual Inspection-3": {"line": "KM-3", "criticality": "Normal"}, "Buffer C1-61": {"line": "KM-3", "criticality": "Normal"}, "Auto Edge Protector-3": {"line": "KM-3", "criticality": "Normal"}, "Auto Sorter-5 KM-3": {"line": "KM-3", "criticality": "Normal"}, "Auto Sorter-6 KM-3": {"line": "KM-3", "criticality": "Normal"}, "Gantry A3-107": {"line": "KM-3", "criticality": "Normal"}, "Gantry A3-111": {"line": "KM-3", "criticality": "Normal"}, "Manipulator A3-117": {"line": "KM-3", "criticality": "Normal"}, "Manipulator A3-120": {"line": "KM-3", "criticality": "Normal"}, "Gantry A3-108": {"line": "KM-3", "criticality": "Normal"}, "Gantry A3-112": {"line": "KM-3", "criticality": "Normal"}}};
+const PEOPLE = [" Chittaranjan", " Darpan", " PRASHANT \\ADESH", " Pravesh", " Vedant", " Vrushabh", " adesh", " bharat", " jayesh patil ", " kunal", " mt", " prashant ", " sushant", "Adesh Maruti Patil", "Aditya gaikwad", "Akshay", "Akshay Kamble", "Anand", "Anand ", "Anil Kammar", "Anjan", "Anjan Chanda", "Anjan pravesh", "BHARAT", "Bharat", "Bharat \\ pradip", "Bharat janu Bangare", "Chirag Dhule", "Chittaranjan", "Chittaranjan ", "Chittaranjan Kurwe", "Darpan", "Deven Kashinath Wajekar", "HITESH", "Hitesh", "Jayesh", "Jayesh Patil ", "Jayesh patil", "KRISHNA", "Kishor", "Kishore", "Krushna", "Mahendra", "Mahendra Kamalakar Pingala", "Moazzam", "Nikhil Patil", "OMKAR ", "Omkar Shinde", "Pradeep ", "Pradip", "Prashant", "Praveen Tyagi", "Praveen Tyagi ", "Pravesh", "Pravesh ", "Praveshkumar Katre", "Rahul", "Runnig OK", "Samadhan Shelke", "Tejas Thakur", "Tushar", "Tushar Dalvi", "Under JC Team", "VIVEEK", "````````````````````````````````````", "adesh aditya pranay", "aditya", "akshay kambale", "anand", "anil", "anil\\prashant\\sushant", "anjan", "bharat ' tejash", "chirag", "chitranjan", "darpan", "devn wajekar", "hiren", "jayesh ", "jayesh dhule", "jayesh patil ", "jayesh patil \\", "jc team ", "kunal", "mahendra", "mayuresh", "omkar", "omkar ", "omkar pranit", "pradeep", "pradip ", "pranit nikhil", "prashant pranit tushar", "pratik", "pravesh", "sushant ", "thushar", "tyagi", "tyagi ", "vivek", "vivek "];
+const DATA_KEY = "km_maintenance_final_2026_08";
+const MACH_KEY = "km_maintenance_machines_2026_08";
+let data = JSON.parse(JSON.stringify(INITIAL));
+let custom = {};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const uniq = a => [...new Set(a.filter(Boolean))].sort();
+
+function loadState(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(DATA_KEY)||"null");
+    if(Array.isArray(saved) && saved.length) data=saved;
+  }catch(e){}
+  try{
+    custom=JSON.parse(localStorage.getItem(MACH_KEY)||"{}")||{};
+    Object.entries(custom).forEach(([line,machines])=>{
+      MASTER[line]=MASTER[line]||{};
+      Object.assign(MASTER[line],machines);
+    });
+  }catch(e){}
+}
+
+function saveState(){localStorage.setItem(DATA_KEY,JSON.stringify(data));}
+function hrs(rows){return rows.reduce((z,x)=>z+(Number(x.dt_hr)||0),0)}
+function availableHours(rows){
+  if(!rows.length)return 0;
+  const dates=rows.map(x=>x.date).sort();
+  const from=$("pFrom")?.value || dates[0];
+  const to=$("pTo")?.value || dates[dates.length-1];
+  if(!from||!to)return 0;
+  return Math.max(0,Math.round((new Date(to+"T00:00:00")-new Date(from+"T00:00:00"))/86400000)+1)*24;
+}
+
+function ratingClass(type,v){
+  v=Number(v)||0;
+  if(type==="uptime") return v>=99.5?"best":v>=98?"good":v>=95?"average":v>=90?"bad":"poor";
+  if(type==="mttr") return v<=0.15?"best":v<=0.30?"good":v<=0.50?"average":v<=1?"bad":"poor";
+  if(type==="mtbf") return v>=550?"best":v>=500?"good":v>=400?"average":v>=250?"bad":"poor";
+  if(type==="downtime") return v<=5?"best":v<=15?"good":v<=30?"average":v<=60?"bad":"poor";
+  if(type==="breakdowns") return v<=2?"best":v<=5?"good":v<=10?"average":v<=20?"bad":"poor";
+  if(type==="usdt" || type==="sdt") return v<=2?"best":v<=8?"good":v<=16?"average":v<=30?"bad":"poor";
+  if(type==="critical") return v===0?"best":v<=1?"good":v<=3?"average":v<=5?"bad":"poor";
+  return "good";
+}
+function RK(n,v,type){
+  const c=ratingClass(type,v);
+  return '<div class="kpi '+c+'"><span class="sub">'+esc(n)+'</span><b>'+esc(v)+'</b></div>';
+}
+
+function K(n,v){return '<div class="kpi"><span class="sub">'+esc(n)+'</span><b>'+esc(v)+'</b></div>'}
+
+function refreshUI(){
+  const names=uniq(Object.values(MASTER).flatMap(o=>Object.keys(o)));
+  $("machineList").innerHTML=names.map(n=>'<option value="'+esc(n)+'">').join("");
+  const p=uniq(PEOPLE.concat(data.map(x=>x.attend||"")));
+  $("peopleList").innerHTML=p.map(n=>'<option value="'+esc(n)+'">').join("");
+  const line=$("bLine").value;
+  $("bMachine").innerHTML=Object.keys(MASTER[line]||{}).map(n=>'<option>'+esc(n)+'</option>').join("");
+  $("dShift").innerHTML='<option value="">All</option>'+uniq(data.map(x=>x.shift)).map(x=>'<option>'+esc(x)+'</option>').join("");
+}
+
+function dateDefaults(){
+  const ds=uniq(data.map(x=>x.date)).sort();
+  const first=ds[0]||"";
+  const last=ds[ds.length-1]||"";
+  $("dFrom").value=first;$("dTo").value=last;
+  $("pFrom").value=first;$("pTo").value=last;
+  $("bSearchFrom").value=first;$("bSearchTo").value=last;
+  $("bDate").value=new Date().toISOString().slice(0,10);
+}
+
+function filterRows(prefix){
+  const machine=($(prefix+"SearchMachine")?.value||"").trim().toLowerCase();
+  const engineer=($(prefix+"SearchEngineer")?.value||"").trim().toLowerCase();
+  const mode=($(prefix+"SearchMode")?.value||"").trim().toLowerCase();
+  const type=($(prefix+"SearchEngType")?.value||"").trim();
+  const level=($(prefix+"SearchLevel")?.value||"").trim();
+  const keyword=($(prefix+"SearchKeyword")?.value||"").trim().toLowerCase();
+  const from=($(prefix+"SearchFrom")?.value||"").trim();
+  const to=($(prefix+"SearchTo")?.value||"").trim();
+
+  return data.filter(x=>{
+    const text=[x.machine,x.station,x.problem,x.activity,x.attend,x.status].join(" ").toLowerCase();
+    const xMode=String(x.mode||"").toLowerCase();
+    const xType=String(x.engineer_type||"");
+    return (!machine||String(x.machine||"").toLowerCase().includes(machine)) &&
+           (!engineer||String(x.attend||"").toLowerCase().includes(engineer)) &&
+           (!mode||xMode===mode) &&
+           (!type||(type==="__blank__"?!xType:xType===type)) &&
+           (!level||x.criticality===level) &&
+           (!keyword||text.includes(keyword)) &&
+           (!from||x.date>=from) &&
+           (!to||x.date<=to);
+  });
+}
+
+function renderDashboard(){
+  const line=$("dLine").value, machine=$("dMachine").value.trim().toLowerCase();
+  const from=$("dFrom").value,to=$("dTo").value,shift=$("dShift").value,level=$("dLevel").value,mode=$("dMode").value.toLowerCase();
+  const rows=data.filter(x=>
+    (!line||x.line===line)&&(!machine||x.machine.toLowerCase().includes(machine))&&
+    (!from||x.date>=from)&&(!to||x.date<=to)&&(!shift||x.shift===shift)&&
+    (!level||x.criticality===level)&&(!mode||String(x.mode||"").toLowerCase()===mode)
+  );
+  const dates=rows.map(x=>x.date).sort();
+  const available=dates.length ? (Math.round((new Date((to||dates.at(-1))+"T00:00:00")-new Date((from||dates[0])+"T00:00:00"))/86400000)+1)*24 : 0;
+  const downtime=hrs(rows),bd=rows.filter(x=>Number(x.dt_min)>0).length;
+  const mttr=bd?downtime/bd:0,mtbf=available?Math.max(0,available-downtime):0,uptime=available?Math.max(0,100*(1-downtime/available)):0;
+  const usdt=rows.filter(x=>String(x.mode).toLowerCase()==="usdt").reduce((z,x)=>z+x.dt_hr,0);
+  const sdt=rows.filter(x=>String(x.mode).toLowerCase()==="sdt").reduce((z,x)=>z+x.dt_hr,0);
+  const eng=rows.reduce((z,x)=>z+(Number(x.engineer_hr)||0),0);
+  $("dashKpis").innerHTML=RK("Breakdowns",bd,"breakdowns")+RK("Downtime",downtime.toFixed(2)+" h","downtime")+RK("Uptime",uptime.toFixed(2)+"%","uptime")+RK("MTTR",mttr.toFixed(2)+" h","mttr")+RK("MTBF",mtbf.toFixed(2)+" h","mtbf")+RK("USDT",usdt.toFixed(2)+" h","usdt")+RK("SDT",sdt.toFixed(2)+" h","sdt")+RK("Critical",rows.filter(x=>x.criticality==="Critical").length,"critical");
+
+  $("lineCards").innerHTML=["KM-1","KM-2","KM-3"].map(lineName=>{
+    const q=rows.filter(x=>x.line===lineName),d=hrs(q),n=q.filter(x=>Number(x.dt_min)>0).length;
+    return '<div class="linecard"><h3>'+lineName+'</h3><b>'+n+'</b> breakdowns<br>Downtime: '+d.toFixed(2)+' h<br>Uptime: '+(available?Math.max(0,100*(1-d/available)):0).toFixed(2)+'%<br>MTTR: '+(n?d/n:0).toFixed(2)+' h<br>MTBF: '+(available?Math.max(0,available-d):0).toFixed(2)+' h<br>Engineer Time: '+q.reduce((z,x)=>z+(Number(x.engineer_hr)||0),0).toFixed(2)+' h</div>';
+  }).join("");
+
+  const lineSum={};
+  rows.forEach(x=>lineSum[x.line]=(lineSum[x.line]||0)+x.dt_hr);
+  $("lineSummary").innerHTML=Object.entries(lineSum).sort().map(([k,v])=>"<p><b>"+esc(k)+"</b>: "+v.toFixed(2)+" h</p>").join("")||"<p>No records.</p>";
+  const dateSum={};
+  rows.forEach(x=>dateSum[x.date]=(dateSum[x.date]||0)+x.dt_hr);
+  $("dateSummary").innerHTML=Object.entries(dateSum).sort().map(([k,v])=>"<p><b>"+k+"</b>: "+v.toFixed(2)+" h</p>").join("")||"<p>No records.</p>";
+
+  const g={};
+  rows.forEach(x=>{
+    const q=g[x.line+"||"+x.machine]||{line:x.line,machine:x.machine,n:0,d:0,u:0,s:0,e:0};
+    if(Number(x.dt_min)>0)q.n++;q.d+=x.dt_hr;
+    if(String(x.mode).toLowerCase()==="usdt")q.u+=x.dt_hr;
+    if(String(x.mode).toLowerCase()==="sdt")q.s+=x.dt_hr;
+    q.e+=Number(x.engineer_hr)||0;g[x.line+"||"+x.machine]=q;
+  });
+  $("machineTable").innerHTML=Object.entries(MASTER).flatMap(([ln,ms])=>Object.keys(ms).map(m=>{
+    const q=g[ln+"||"+m]||{line:ln,machine:m,n:0,d:0,u:0,s:0,e:0};
+    return "<tr><td>"+ln+"</td><td>"+esc(m)+"</td><td>"+q.n+"</td><td>"+q.d.toFixed(2)+"</td><td>"+(available?Math.max(0,100*(1-q.d/available)):0).toFixed(2)+"%</td><td>"+(q.n?q.d/q.n:0).toFixed(2)+"</td><td>"+(available?Math.max(0,available-q.d):0).toFixed(2)+"</td><td>"+q.u.toFixed(2)+"</td><td>"+q.s.toFixed(2)+"</td><td>"+q.e.toFixed(2)+"</td></tr>";
+  })).join("");
+}
+
+function renderBreakdown(){
+  const rows=filterRows("b");
+  $("breakCount").textContent="("+rows.length+" records)";
+  $("breakdownTable").innerHTML=rows.slice().sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start)).map(x=>rowHTML(x)).join("")||'<tr><td colspan="13">No matching breakdowns.</td></tr>';
+}
+
+function rowHTML(x){
+  const cls=x.criticality==="Critical"?"critical":x.criticality==="Major"?"major":"";
+  return '<tr class="'+cls+'"><td>'+esc(x.date)+'</td><td>'+esc(x.line)+'</td><td>'+esc(x.machine)+'</td><td>'+esc(x.start)+'</td><td>'+esc(x.end)+'</td><td>'+esc(x.dt_min)+'</td><td>'+esc(x.mode)+'</td><td>'+esc(x.problem)+'</td><td>'+esc(x.activity)+'</td><td>'+esc(x.attend)+'</td><td>'+esc(x.criticality)+'</td></tr>';
+}
+
+function val(id){
+  const el=$(id);
+  return el ? (el.value||"") : "";
+}
+
+function performanceRows(){
+  const line=val("pLine"),from=val("pFrom"),to=val("pTo");
+  const base=data.filter(x=>(!line||x.line===line)&&(!from||x.date>=from)&&(!to||x.date<=to));
+  const machine=val("pSearchMachine").trim().toLowerCase();
+  const engineer=val("pSearchEngineer").trim().toLowerCase();
+  const mode=val("pSearchMode").trim().toLowerCase();
+  const type=val("pSearchEngType").trim();
+  const level=val("pSearchLevel").trim();
+  const keyword=val("pSearchKeyword").trim().toLowerCase();
+  return base.filter(x=>{
+    const text=[x.machine,x.station,x.problem,x.activity,x.attend,x.status].join(" ").toLowerCase();
+    const xType=String(x.engineer_type||"");
+    return (!machine||String(x.machine||"").toLowerCase().includes(machine)) &&
+      (!engineer||String(x.attend||"").toLowerCase().includes(engineer)) &&
+      (!mode||String(x.mode||"").toLowerCase()===mode) &&
+      (!type||(type==="__blank__"?!xType:xType===type)) &&
+      (!level||x.criticality===level) &&
+      (!keyword||text.includes(keyword));
+  });
+}
+
+function renderPerformance(){
+  const rows=performanceRows();
+  const base=data.filter(x=>(!val("pLine")||x.line===val("pLine"))&&(!val("pFrom")||x.date>=val("pFrom"))&&(!val("pTo")||x.date<=val("pTo")));
+  const dates=base.map(x=>x.date).sort();
+  const available=dates.length?((Math.round((new Date((val("pTo")||dates.at(-1))+"T00:00:00")-new Date((val("pFrom")||dates[0])+"T00:00:00"))/86400000)+1)*24):0;
+  const downtime=hrs(rows),bd=rows.filter(x=>Number(x.dt_min)>0).length;
+  const uptime=available?Math.max(0,100*(1-downtime/available)):0;
+  const mttr=bd?downtime/bd:0,mtbf=available?Math.max(0,available-downtime):0;
+  const usdt=rows.filter(x=>String(x.mode).toLowerCase()==="usdt").reduce((z,x)=>z+x.dt_hr,0);
+  const sdt=rows.filter(x=>String(x.mode).toLowerCase()==="sdt").reduce((z,x)=>z+x.dt_hr,0);
+
+  $("perfKpis").innerHTML=
+    RK("Breakdowns",bd,"breakdowns")+
+    RK("Downtime",downtime.toFixed(2)+" h","downtime")+
+    RK("Uptime",uptime.toFixed(2)+"%","uptime")+
+    RK("MTTR",mttr.toFixed(2)+" h","mttr")+
+    RK("MTBF",mtbf.toFixed(2)+" h","mtbf")+
+    RK("USDT",usdt.toFixed(2)+" h","usdt")+
+    RK("SDT",sdt.toFixed(2)+" h","sdt")+
+    RK("Critical",base.filter(x=>x.criticality==="Critical").length,"critical");
+
+  // Show every machine for the selected line/date range, including zero-breakdown machines.
+  const g={};
+  rows.forEach(x=>{
+    const key=x.line+"||"+x.machine;
+    const q=g[key]||{line:x.line,machine:x.machine,n:0,d:0,u:0,s:0};
+    if(Number(x.dt_min)>0)q.n++;
+    q.d+=Number(x.dt_hr)||0;
+    if(String(x.mode).toLowerCase()==="usdt")q.u+=Number(x.dt_hr)||0;
+    if(String(x.mode).toLowerCase()==="sdt")q.s+=Number(x.dt_hr)||0;
+    g[key]=q;
+  });
+
+  const selectedLines=val("pLine")?[val("pLine")]:["KM-1","KM-2","KM-3"];
+  const machineRows=[];
+  selectedLines.forEach(ln=>{
+    Object.keys(MASTER[ln]||{}).forEach(m=>{
+      const q=g[ln+"||"+m]||{line:ln,machine:m,n:0,d:0,u:0,s:0};
+      const up=available?Math.max(0,100*(1-q.d/available)):100;
+      const c=ratingClass("uptime",up);
+      machineRows.push(
+        '<tr class="machine-'+c+'"><td>'+esc(ln)+'</td><td>'+esc(m)+'</td><td>'+q.n+
+        '</td><td>'+up.toFixed(2)+'%</td><td>'+(q.n?q.d/q.n:0).toFixed(2)+
+        '</td><td>'+(available?Math.max(0,available-q.d):0).toFixed(2)+
+        '</td><td>'+q.u.toFixed(2)+'</td><td>'+q.s.toFixed(2)+'</td></tr>'
+      );
+    });
+  });
+  $("perfMachineTable").innerHTML=machineRows.join("")||'<tr><td colspan="8">No machine records.</td></tr>';
+
+  $("perfHistoryCount").textContent="("+rows.length+" records)";
+  $("historyTable").innerHTML=rows.slice().sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start)).map(rowHTML).join("")||
+    '<tr><td colspan="11">No matching breakdowns.</td></tr>';
+}
+
+function clearDashboard(){
+  $("dLine").value="";$("dMachine").value="";$("dShift").value="";$("dLevel").value="";$("dMode").value="";
+  dateDefaults();renderDashboard();
+}
+function clearBreakdownSearch(){
+  ["bSearchMachine","bSearchEngineer","bSearchKeyword"].forEach(id=>$(id).value="");
+  ["bSearchMode","bSearchEngType","bSearchLevel"].forEach(id=>$(id).value="");
+  dateDefaults();renderBreakdown();
+}
+function clearPerformanceSearch(){
+  ["pSearchMachine","pSearchEngineer","pSearchKeyword"].forEach(id=>$(id).value="");
+  ["pSearchMode","pSearchLevel"].forEach(id=>{if($(id))$(id).value="";});
+  renderPerformance();
+}
+
+function saveBreakdown(){
+  const x={
+    id:"manual-"+Date.now(),date:$("bDate").value,line:$("bLine").value,shift:$("bShift").value,machine:$("bMachine").value,
+    station:$("bStation").value,start:$("bStart").value,end:$("bEnd").value,dt_min:Number($("bDt").value)||0,
+    dt_hr:(Number($("bDt").value)||0)/60,mode:$("bMode").value,engineer_hr:Number($("bEng")?.value)||0,
+    engineer_type:$("bEngType")?.value||"",attend:$("bAttend").value,problem:$("bProblem").value,
+    activity:$("bAction").value,status:$("bStatus").value,criticality:$("bLevel").value
+  };
+  if(!x.date||!x.machine||!x.problem){$("saveMsg").textContent="Date, machine and problem are required.";return}
+  data.push(x);saveState();refreshUI();renderDashboard();renderBreakdown();renderPerformance();
+  $("saveMsg").textContent="Saved: "+x.line+" / "+x.machine;
+  if(window.kmCloudAfterLocalSave) window.kmCloudAfterLocalSave(x);
+}
+
+function addMachine(){
+  const line=$("mLine").value,name=$("mName").value.trim(),crit=$("mCrit").value;
+  if(!name)return;
+  if(MASTER[line][name]){alert("Machine already exists");return}
+  custom[line]=custom[line]||{};
+  custom[line][name]={line,criticality:crit};
+  MASTER[line][name]=custom[line][name];
+  localStorage.setItem(MACH_KEY,JSON.stringify(custom));
+  refreshUI();renderDashboard();renderPerformance();masterList();$("mName").value="";
+}
+function masterList(){
+  $("masterTable").innerHTML=Object.entries(MASTER).flatMap(([line,ms])=>Object.entries(ms).map(([m,q])=>"<tr><td>"+line+"</td><td>"+esc(m)+"</td><td>"+esc(q.criticality)+"</td></tr>")).join("");
+}
+function openMachines(){$("machineModal").style.display="flex";masterList()}
+function closeMachines(){$("machineModal").style.display="none"}
+
+function showPage(id,btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  $(id).classList.add("active");
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  btn.classList.add("active");
+  if(id==="dashboard")renderDashboard();
+  if(id==="breakdown")renderBreakdown();
+  if(id==="performance")renderPerformance();
+  if(id==="analysis")renderAnalysis();
+}
+
+function calcOEE(){
+  const planned=Number($("op").value),run=Number($("or").value),cycle=Number($("oc").value),total=Number($("ot").value),good=Number($("og").value);
+  if(!(planned>0&&run>0&&cycle>0&&total>0&&good>=0)){alert("Enter all OEE values.");return}
+  const availability=run/planned,performance=(cycle*total/3600)/run,quality=good/total,oee=availability*performance*quality;
+  $("oeeResult").innerHTML=K("Availability",(availability*100).toFixed(2)+"%")+K("Performance",(performance*100).toFixed(2)+"%")+K("Quality",(quality*100).toFixed(2)+"%")+K("OEE",(oee*100).toFixed(2)+"%");
+}
+
+function login(){
+  if($("uid").value.trim().toLowerCase()==="admin" && $("pw").value==="admin123"){
+    $("login").style.display="none";$("app").style.display="block";startApp();
+  }else $("loginMsg").textContent="Invalid ID or password.";
+}
+function logout(){
+  $("app").style.display="none";$("login").style.display="flex";$("pw").value="";$("loginMsg").textContent="";
+}
+function startApp(){
+  loadState();refreshUI();dateDefaults();renderDashboard();renderBreakdown();renderPerformance();renderAnalysis();
+}
+
+$("bLine").addEventListener("change",refreshUI);
+["dLine","dMachine","dFrom","dTo","dShift","dLevel","dMode"].forEach(id=>$(id).addEventListener("change",renderDashboard));
+["bSearchMachine","bSearchEngineer","bSearchKeyword","bSearchFrom","bSearchTo"].forEach(id=>$(id).addEventListener("input",renderBreakdown));
+["bSearchMode","bSearchEngType","bSearchLevel"].forEach(id=>$(id).addEventListener("change",renderBreakdown));
+["pLine","pFrom","pTo","pSearchMachine","pSearchEngineer","pSearchKeyword"].forEach(id=>$(id).addEventListener("input",renderPerformance));
+["pSearchMode","pSearchLevel"].forEach(id=>$(id).addEventListener("change",renderPerformance));
+
+$("excelFile").addEventListener("change",async e=>{
+  const file=e.target.files[0]; if(!file)return;
+  if(/\.csv$/i.test(file.name)){alert("CSV import is supported directly. For XLSX, the app will load the Excel reader.");}
+  try{
+    if(!window.XLSX){
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement("script");
+        s.src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+        s.onload=resolve;s.onerror=reject;document.head.appendChild(s);
+      });
+    }
+    const buf=await file.arrayBuffer();
+    const book=XLSX.read(buf,{type:"array",cellDates:true});
+    const imported=[];
+    ["KM-1","KM-2","KM-3"].forEach(line=>{
+      const ws=book.Sheets[line+" Daily BD entry Aug"]; if(!ws)return;
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i], dt=r[1], machine=String(r[4]||"").trim(); if(!dt||!machine)continue;
+        const dateObj=dt instanceof Date?dt:new Date(dt);
+        if(isNaN(dateObj))continue;
+        const pad=n=>String(n).padStart(2,"0");
+        const date=dateObj.getFullYear()+"-"+pad(dateObj.getMonth()+1)+"-"+pad(dateObj.getDate());
+        const dtMin=Number(r[10])||0,mode=String(r[12]||"").trim();
+        imported.push({id:"imp-"+line+"-"+i,date,line,shift:String(r[3]||"").trim(),machine,station:String(r[5]||"").trim(),problem:String(r[6]||"").trim(),activity:String(r[7]||"").trim(),start:String(r[8]||"").trim(),end:String(r[9]||"").trim(),dt_min:dtMin,dt_hr:dtMin/60,mode,status:String(r[13]||"").trim(),attend:String(r[14]||"").trim(),production_loss:Number(r[15])||0,engineer_hr:mode.toLowerCase()==="eng. time"?dtMin/60:0,engineer_type:mode.toLowerCase()==="eng. time"?"Engineer Time":"",criticality:"Normal"});
+      }
+    });
+    if(!imported.length){alert("No breakdown records found in the expected sheets.");return}
+    data=imported;saveState();refreshUI();dateDefaults();renderDashboard();renderBreakdown();renderPerformance();alert("Excel updated successfully: "+imported.length+" breakdown records loaded.");
+  }catch(err){alert("Excel import could not be completed. Check internet access for the Excel reader or use a CSV export.\\n\\n"+err);}
+  e.target.value="";
+});
+
+
+function renderAnalysis(){
+  const rows=data||[];
+  const totalDt=rows.reduce((z,x)=>z+(Number(x.dt_hr)||0),0);
+  const dates=rows.map(x=>x.date).filter(Boolean).sort();
+  const available=dates.length?((Math.round((new Date(dates.at(-1)+"T00:00:00")-new Date(dates[0]+"T00:00:00"))/86400000)+1)*24):0;
+  const uptime=available?Math.max(0,100*(1-totalDt/available)):100;
+  const bd=rows.length, mttr=bd?totalDt/bd:0, mtbf=bd?Math.max(0,available-totalDt):available;
+  const usdt=rows.filter(x=>String(x.mode).toLowerCase()==="usdt").reduce((z,x)=>z+(Number(x.dt_hr)||0),0);
+  const sdt=rows.filter(x=>String(x.mode).toLowerCase()==="sdt").reduce((z,x)=>z+(Number(x.dt_hr)||0),0);
+  const critical=rows.filter(x=>x.criticality==="Critical").length;
+  const major=rows.filter(x=>x.criticality==="Major").length;
+
+  $("analysisKpis").innerHTML=
+    RK("Breakdowns",bd,"breakdowns")+
+    RK("Downtime",totalDt.toFixed(2)+" h","downtime")+
+    RK("Uptime",uptime.toFixed(2)+"%","uptime")+
+    RK("MTTR",mttr.toFixed(2)+" h","mttr")+
+    RK("MTBF",mtbf.toFixed(2)+" h","mtbf")+
+    RK("USDT",usdt.toFixed(2)+" h","usdt")+
+    RK("SDT",sdt.toFixed(2)+" h","sdt")+
+    RK("Critical",critical,"critical");
+
+  const mg={};
+  rows.forEach(x=>{
+    const k=(x.line||"")+"||"+(x.machine||"");
+    const q=mg[k]||{line:x.line||"",machine:x.machine||"",bd:0,dt:0};
+    q.bd++; q.dt+=Number(x.dt_hr)||0; mg[k]=q;
+  });
+  const machineList=Object.values(mg).sort((a,b)=>b.dt-a.dt);
+  $("topMachinesTable").innerHTML=machineList.slice(0,10).map((q,i)=>{
+    const up=available?Math.max(0,100*(1-q.dt/available)):100;
+    const c=ratingClass("uptime",up);
+    return '<tr class="machine-'+c+'"><td>'+(i+1)+'</td><td>'+esc(q.line)+'</td><td>'+esc(q.machine)+'</td><td>'+q.bd+'</td><td>'+q.dt.toFixed(2)+'</td><td>'+up.toFixed(2)+'%</td></tr>';
+  }).join("")||'<tr><td colspan="6">No breakdown data.</td></tr>';
+
+  const ig={};
+  rows.forEach(x=>{
+    const issue=String(x.problem||x.issue||"Not specified").trim()||"Not specified";
+    const q=ig[issue]||{issue,events:0,dt:0};
+    q.events++; q.dt+=Number(x.dt_hr)||0; ig[issue]=q;
+  });
+  $("topIssuesTable").innerHTML=Object.values(ig).sort((a,b)=>b.dt-a.dt).slice(0,10).map((q,i)=>{
+    const pct=totalDt?100*q.dt/totalDt:0;
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(q.issue)+'</td><td>'+q.events+'</td><td>'+q.dt.toFixed(2)+'</td><td>'+pct.toFixed(1)+'%</td></tr>';
+  }).join("")||'<tr><td colspan="5">No issue data.</td></tr>';
+
+  $("majorCriticalTable").innerHTML=rows.filter(x=>x.criticality==="Major"||x.criticality==="Critical")
+    .sort((a,b)=>(Number(b.dt_hr)||0)-(Number(a.dt_hr)||0)).slice(0,15).map(x=>{
+      const cls=x.criticality==="Critical"?"critical":"major";
+      return '<tr class="'+cls+'"><td>'+esc(x.date)+'</td><td>'+esc(x.line)+'</td><td>'+esc(x.machine)+'</td><td>'+Number(x.dt_hr||0).toFixed(2)+'</td><td>'+esc(x.problem||x.issue||"")+'</td><td>'+esc(x.criticality||"")+'</td></tr>';
+    }).join("")||'<tr><td colspan="6">No Major/Critical breakdowns.</td></tr>';
+
+  const lg={};
+  rows.forEach(x=>{
+    const k=x.line||"";
+    const q=lg[k]||{line:k,bd:0,dt:0}; q.bd++; q.dt+=Number(x.dt_hr)||0; lg[k]=q;
+  });
+  $("lineSummaryTable").innerHTML=["KM-1","KM-2","KM-3"].map(k=>{
+    const q=lg[k]||{line:k,bd:0,dt:0};
+    const up=available?Math.max(0,100*(1-q.dt/available)):100;
+    const m=q.bd?q.dt/q.bd:0, b= q.bd?Math.max(0,available-q.dt):available;
+    const c=ratingClass("uptime",up);
+    return '<tr class="machine-'+c+'"><td>'+k+'</td><td>'+q.bd+'</td><td>'+q.dt.toFixed(2)+'</td><td>'+up.toFixed(2)+'%</td><td>'+m.toFixed(2)+' h</td><td>'+b.toFixed(2)+' h</td></tr>';
+  }).join("");
+}
+
+
+
+</script>
+
+
+
+
+<script>
+(function(){
+  const NEW_HEADERS = ["Date","Line","Shift","Machine","Station","Mode","Start","End","Downtime min","Attended by","Level","Status","Problem","Action"];
+
+  function norm(v){ return String(v ?? "").trim(); }
+  function findCol(headers, name){
+    const target=name.toLowerCase();
+    return headers.findIndex(h=>norm(h).toLowerCase()===target);
+  }
+  function excelTime(v){
+    if(v instanceof Date) return v.toTimeString().slice(0,5);
+    if(typeof v==="number"){
+      const mins=Math.round(v*24*60);
+      return String(Math.floor(mins/60)%24).padStart(2,"0")+":"+String(mins%60).padStart(2,"0");
+    }
+    return norm(v);
+  }
+  function excelDate(v){
+    if(v instanceof Date) return v.toISOString().slice(0,10);
+    if(typeof v==="number"){
+      const d=new Date(Math.round((v-25569)*86400*1000));
+      return isNaN(d)?norm(v):d.toISOString().slice(0,10);
+    }
+    const s=norm(v);
+    if(!s) return "";
+    const d=new Date(s);
+    return isNaN(d) ? s : d.toISOString().slice(0,10);
+  }
+
+  function mapRow(row, headers){
+    const get=n=>row[findCol(headers,n)];
+    const start=excelTime(get("Start")), end=excelTime(get("End"));
+    let dt=Number(get("Downtime min"));
+    if(!isFinite(dt) && start && end){
+      const a=start.split(":").map(Number), b=end.split(":").map(Number);
+      if(a.length>=2 && b.length>=2){
+        let m=(b[0]*60+b[1])-(a[0]*60+a[1]);
+        if(m<0)m+=1440;
+        dt=m;
+      } else dt=0;
+    }
+    return {
+      date:excelDate(get("Date")),
+      line:norm(get("Line")),
+      shift:norm(get("Shift")),
+      machine:norm(get("Machine")),
+      station:norm(get("Station")),
+      mode:norm(get("Mode")),
+      start:start,
+      end:end,
+      dt_hr:(isFinite(dt)?dt:0)/60,
+      attended:norm(get("Attended by")),
+      engineer:norm(get("Attended by")),
+      engineerType:norm(get("Mode")),
+      criticality:norm(get("Level")),
+      status:norm(get("Status")),
+      problem:norm(get("Problem")),
+      issue:norm(get("Problem")),
+      action:norm(get("Action"))
+    };
+  }
+
+  async function importNewExcel(){
+    const input=document.getElementById("excelFile");
+    const status=document.getElementById("excelImportStatus");
+    if(!input || !input.files || !input.files[0]){
+      if(status) status.textContent="Select the completed Excel file first.";
+      return;
+    }
+    if(typeof XLSX==="undefined"){
+      if(status) status.textContent="Excel reader is not available. Please open the app with internet access once.";
+      return;
+    }
+    try{
+      const file=input.files[0];
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:"array",cellDates:true});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:""});
+      if(rows.length<2) throw new Error("The Excel sheet has no breakdown rows.");
+      const headers=rows[0].map(norm);
+      const missing=NEW_HEADERS.filter(h=>findCol(headers,h)<0);
+      if(missing.length) throw new Error("Missing columns: "+missing.join(", "));
+
+      const incoming=rows.slice(1).map(r=>mapRow(r,headers))
+        .filter(x=>x.date || x.machine || x.problem);
+
+      const current=Array.isArray(window.data)?window.data:[];
+      const key=x=>[x.date,x.line,x.machine,x.start,x.end,x.problem,x.attended].map(norm).join("|").toLowerCase();
+      const existing=new Set(current.map(key));
+      let added=0;
+      incoming.forEach(x=>{
+        const k=key(x);
+        if(!existing.has(k)){ current.push(x); existing.add(k); added++; }
+      });
+      window.data=current;
+      if(typeof saveState==="function") saveState();
+      if(typeof refreshUI==="function") refreshUI();
+      if(typeof renderDashboard==="function") renderDashboard();
+      if(typeof renderBreakdown==="function") renderBreakdown();
+      if(typeof renderPerformance==="function") renderPerformance();
+      if(typeof renderAnalysis==="function") renderAnalysis();
+
+      if(status) status.textContent=`Updated successfully: ${added} new breakdown(s) added. ${incoming.length-added} duplicate(s) skipped.`;
+    }catch(err){
+      if(status) status.textContent="Excel update failed: "+err.message;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    const btn=document.getElementById("importExcelBtn");
+    if(btn) btn.addEventListener("click",importNewExcel);
+  });
+})();
+</script>
+
+
+
+<script>
+(function(){
+  function cell(v){ return String(v==null?"":v)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;"); }
+
+  function exportBreakdownsToExcel(){
+    const status=document.getElementById("excelExportStatus");
+    const rows=Array.isArray(window.data)?window.data:[];
+    const headers=["Date","Line","Shift","Machine","Station","Mode","Start","End",
+                   "Downtime min","Attended by","Level","Status","Problem","Action"];
+
+    let table='<table border="1"><tr>'+headers.map(h=>'<th>'+cell(h)+'</th>').join('')+'</tr>';
+    rows.forEach(x=>{
+      const vals=[
+        x.date,x.line,x.shift,x.machine,x.station,x.mode,x.start,x.end,
+        (Number(x.dt_hr||0)*60).toFixed(2),
+        x.attended||x.engineer,x.criticality,x.status,x.problem||x.issue,x.action
+      ];
+      table+='<tr>'+vals.map(v=>'<td>'+cell(v)+'</td>').join('')+'</tr>';
+    });
+    table+='</table>';
+
+    const doc='<!doctype html><html><head><meta charset="utf-8"></head><body>'+
+      '<h2>KM-1 / KM-2 / KM-3 Maintenance Breakdown Export</h2>'+
+      table+'</body></html>';
+
+    const blob=new Blob([doc],{type:"application/vnd.ms-excel;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    const d=new Date();
+    const stamp=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    a.href=url;
+    a.download="KM_Maintenance_Breakdowns_"+stamp+".xls";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    if(status) status.textContent="Excel sheet updated: "+rows.length+" breakdown record(s).";
+  }
+
+  function openExcelModal(){
+    const m=document.getElementById("excelExportModal");
+    if(m) m.style.display="flex";
+  }
+  function closeExcelModal(){
+    const m=document.getElementById("excelExportModal");
+    if(m) m.style.display="none";
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    const f=document.getElementById("excelFloatBtn");
+    const e=document.getElementById("excelExportBtn");
+    const c=document.getElementById("excelCloseBtn");
+    const m=document.getElementById("excelExportModal");
+    if(f) f.addEventListener("click",openExcelModal);
+    if(e) e.addEventListener("click",exportBreakdownsToExcel);
+    if(c) c.addEventListener("click",closeExcelModal);
+    if(m) m.addEventListener("click",function(ev){if(ev.target===m)closeExcelModal()});
+  });
+})();
+</script>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  const t=document.getElementById("excelToolsToggle");
+  const p=document.getElementById("excelToolsPanel");
+  if(t && p){
+    t.addEventListener("click",function(){
+      p.style.display=(p.style.display==="none" || !p.style.display)?"block":"none";
+    });
+  }
+});
+</script>
+
+<style>
+.cloud-float{position:fixed;right:76px;bottom:18px;z-index:9998;width:48px;height:48px;border-radius:50%;border:0;background:#175cd3;color:#fff;font-size:23px;font-weight:900;box-shadow:0 5px 18px rgba(16,24,40,.28)}
+.cloud-float:active{transform:scale(.96)}
+.cloud-modal{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;background:rgba(16,24,40,.55);padding:18px}
+.cloud-card{width:min(520px,100%);background:#fff;border-radius:18px;padding:22px;position:relative;box-shadow:0 18px 55px rgba(16,24,40,.30)}
+.cloud-card h2{margin:0 0 6px}.cloud-card .small{line-height:1.45}
+.cloud-row{margin-top:10px}.cloud-row label{display:block}.cloud-card input{margin-top:4px}
+.cloud-status{padding:10px;border-radius:9px;background:#eff8ff;color:#175cd3;font-weight:700;margin-top:12px;min-height:40px}
+.cloud-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.cloud-actions .btn{flex:1;min-width:140px}
+.cloud-close{position:absolute;right:10px;top:8px;border:0;background:transparent;font-size:30px;color:#667085;line-height:1}
+@media(max-width:600px){.cloud-float{right:68px;bottom:14px;width:46px;height:46px}}
+</style>
+<div id="cloudModal" class="cloud-modal" style="display:none" role="dialog" aria-modal="true" aria-label="Cloud Sync">
+  <div class="cloud-card">
+    <button id="cloudClose" class="cloud-close" type="button" aria-label="Close">×</button>
+    <h2>☁ Cloud Sync</h2>
+    <div class="small sub">Shared Microsoft OneDrive file sync for KM-1 / KM-2 / KM-3.</div>
+    <div class="cloud-row">
+      <label>Microsoft Entra App (Client) ID</label>
+      <input id="cloudClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+    </div>
+    <div class="cloud-row">
+      <label>Shared OneDrive file link</label>
+      <input id="cloudShareUrl" placeholder="Paste the shared edit link to km-maintenance-data.json">
+    </div>
+    <div class="cloud-actions">
+      <button id="cloudLogin" class="btn" type="button">Sign in with Microsoft</button>
+      <button id="cloudPull" class="btn dark" type="button">Sync Now</button>
+      <button id="cloudPush" class="btn green" type="button">Save to Cloud</button>
+    </div>
+    <div id="cloudStatus" class="cloud-status">Cloud is not configured yet.</div>
+    <div class="small sub" style="margin-top:10px">
+      One-time setup is required: a company Microsoft Entra app registration with delegated Files.ReadWrite permission, and one shared editable JSON data file in OneDrive.
+      The app uses the signed-in Microsoft account; no password is stored here.
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@latest/lib/msal-browser.min.js"></script>
+<script>
+(function(){
+  const CFG_KEY="km_maintenance_cloud_cfg_v1";
+  const DEFAULT_CFG={clientId:"",shareUrl:"",authority:"https://login.microsoftonline.com/organizations"};
+  let cfg=Object.assign({},DEFAULT_CFG,JSON.parse(localStorage.getItem(CFG_KEY)||"{}"));
+  let msalApp=null, account=null, cloudItem=null, cloudEtag=null, cloudBusy=false;
+
+  const el=id=>document.getElementById(id);
+  function status(t,ok){const s=el("cloudStatus"); if(s){s.textContent=t;s.style.background=ok?"#ecfdf3":"#eff8ff";s.style.color=ok?"#067647":"#175cd3";}}
+  function saveCfg(){cfg.clientId=el("cloudClientId").value.trim();cfg.shareUrl=el("cloudShareUrl").value.trim();localStorage.setItem(CFG_KEY,JSON.stringify(cfg));}
+  function loadCfg(){el("cloudClientId").value=cfg.clientId||"";el("cloudShareUrl").value=cfg.shareUrl||"";}
+  function open(){loadCfg();el("cloudModal").style.display="flex";}
+  function close(){el("cloudModal").style.display="none";}
+  function tokenFromShareUrl(url){
+    const bytes=new TextEncoder().encode(url);
+    let bin="";bytes.forEach(b=>bin+=String.fromCharCode(b));
+    return "u!"+btoa(bin).replace(/=/g,"").replace(/\//g,"_").replace(/\+/g,"-");
+  }
+  async function initMsal(){
+    saveCfg();
+    if(!cfg.clientId)throw new Error("Enter the Microsoft Entra App (Client) ID.");
+    if(!window.msal)throw new Error("Microsoft sign-in library did not load. Open the app with internet access.");
+    if(!msalApp){
+      msalApp=new msal.PublicClientApplication({
+        auth:{clientId:cfg.clientId,authority:cfg.authority,redirectUri:window.location.href.split("#")[0]},
+        cache:{cacheLocation:"localStorage"}
+      });
+      await msalApp.initialize();
+    }
+  }
+  async function login(){
+    await initMsal();
+    const res=await msalApp.loginPopup({scopes:["Files.ReadWrite"],prompt:"select_account"});
+    account=res.account;status("Signed in as "+(account.username||account.name||"Microsoft user")+".",true);
+  }
+  async function accessToken(){
+    await initMsal();
+    if(!account){
+      const accts=msalApp.getAllAccounts();
+      account=accts[0]||null;
+    }
+    if(!account){await login();}
+    try{
+      const r=await msalApp.acquireTokenSilent({account,scopes:["Files.ReadWrite"]});
+      return r.accessToken;
+    }catch(e){
+      const r=await msalApp.acquireTokenPopup({account,scopes:["Files.ReadWrite"]});
+      return r.accessToken;
+    }
+  }
+  async function graph(path,opts={}){
+    const t=await accessToken();
+    const headers=new Headers(opts.headers||{});
+    headers.set("Authorization","Bearer "+t);
+    return fetch("https://graph.microsoft.com/v1.0"+path,Object.assign({},opts,{headers}));
+  }
+  async function resolveSharedItem(){
+    if(!cfg.shareUrl)throw new Error("Paste the shared OneDrive file link.");
+    const token=tokenFromShareUrl(cfg.shareUrl);
+    const r=await graph("/shares/"+encodeURIComponent(token)+"/driveItem");
+    if(!r.ok)throw new Error("Cannot access the shared file ("+r.status+"). Make sure the link gives Edit access to this company account.");
+    const j=await r.json();
+    cloudItem=j;cloudEtag=j.eTag||null;
+    return j;
+  }
+  async function pullCloud(silent=false){
+    if(cloudBusy)return; cloudBusy=true;
+    try{
+      const item=await resolveSharedItem();
+      const driveId=item.parentReference&&item.parentReference.driveId;
+      if(!driveId)throw new Error("Shared file drive information was not returned.");
+      const r=await graph("/drives/"+encodeURIComponent(driveId)+"/items/"+encodeURIComponent(item.id)+"/content");
+      if(!r.ok)throw new Error("Cannot download cloud data ("+r.status+").");
+      const txt=await r.text();
+      const remote=txt.trim()?JSON.parse(txt):[];
+      if(!Array.isArray(remote))throw new Error("Cloud file must contain a JSON array.");
+      data=remote;
+      saveState();refreshUI();renderDashboard();renderBreakdown();renderPerformance();renderAnalysis();
+      status("Cloud sync complete: "+remote.length+" breakdown records.",true);
+    }catch(e){if(!silent)status("Cloud sync failed: "+e.message,false);console.error(e);}
+    finally{cloudBusy=false;}
+  }
+  async function pushCloud(){
+    if(cloudBusy)return; cloudBusy=true;
+    try{
+      const item=await resolveSharedItem();
+      const driveId=item.parentReference&&item.parentReference.driveId;
+      if(!driveId)throw new Error("Shared file drive information was not returned.");
+      const cr=await graph("/drives/"+encodeURIComponent(driveId)+"/items/"+encodeURIComponent(item.id)+"/content");
+      let remote=[];
+      if(cr.ok){
+        const txt=await cr.text(); remote=txt.trim()?JSON.parse(txt):[];
+        if(!Array.isArray(remote))remote=[];
+      }
+      const key=x=>[x.id,x.date,x.line,x.machine,x.start,x.end,x.problem,x.attend].map(v=>String(v??"").trim().toLowerCase()).join("|");
+      const map=new Map(remote.map(x=>[key(x),x]));
+      data.forEach(x=>map.set(key(x),x));
+      const merged=[...map.values()];
+      const body=JSON.stringify(merged,null,2);
+      const headers={"Content-Type":"application/json"};
+      if(cloudEtag)headers["If-Match"]=cloudEtag;
+      const wr=await graph("/drives/"+encodeURIComponent(driveId)+"/items/"+encodeURIComponent(item.id)+"/content",{method:"PUT",headers,body});
+      if(wr.status===412){
+        cloudEtag=null;
+        throw new Error("Another phone updated the file at the same time. Tap Sync Now, then Save to Cloud again.");
+      }
+      if(!wr.ok)throw new Error("Cloud save failed ("+wr.status+").");
+      const saved=await wr.json();cloudEtag=saved.eTag||null;data=merged;saveState();
+      refreshUI();renderDashboard();renderBreakdown();renderPerformance();renderAnalysis();
+      status("Saved to shared OneDrive: "+merged.length+" breakdown records.",true);
+    }catch(e){status("Cloud save failed: "+e.message,false);console.error(e);}
+    finally{cloudBusy=false;}
+  }
+  window.kmCloudAfterLocalSave=async function(record){
+    try{if(!cfg.clientId||!cfg.shareUrl)return;await pushCloud();}catch(e){console.error(e);}
+  };
+  document.addEventListener("DOMContentLoaded",function(){
+    el("cloudFloatBtn")?.addEventListener("click",open);
+    el("cloudClose")?.addEventListener("click",close);
+    el("cloudModal")?.addEventListener("click",e=>{if(e.target===el("cloudModal"))close();});
+    el("cloudLogin")?.addEventListener("click",async()=>{try{await login();}catch(e){status("Microsoft sign-in failed: "+e.message,false);}});
+    el("cloudPull")?.addEventListener("click",async()=>{saveCfg();await pullCloud(false);});
+    el("cloudPush")?.addEventListener("click",async()=>{saveCfg();await pushCloud();});
+    loadCfg();
+    if(cfg.clientId&&cfg.shareUrl){setTimeout(()=>pullCloud(true),1500);setInterval(()=>pullCloud(true),15000);}
+  });
+})();
+</script>
+</body>
+</html>
+<style>
+.panel:has(#engineerTable){display:none!important}
+#bEng,#bEngType{display:none}
+#bEng,#bEngType{visibility:hidden}
+</style>
